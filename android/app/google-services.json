@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "837850795211",
+    "project_id": "algo-avengers-ves-final",
+    "storage_bucket": "algo-avengers-ves-final.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837850795211:android:b20c3c8a6da5cc2e829f4e",
+        "android_client_info": {
+          "package_name": "com.example.algorithm_avengers_ves_final"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmv-BktS1xeyd07TH6EAGxogO6dx0iC1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
