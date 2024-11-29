@@ -83,4 +83,5 @@ class DefaultFirebaseOptions {
     authDomain: 'algo-avengers-ves-final.firebaseapp.com',
     storageBucket: 'algo-avengers-ves-final.firebasestorage.app',
   );
+
 }
