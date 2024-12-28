@@ -31,6 +31,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        namespace = 'com.example.algorithm_avengers_ves_final'
     }
 
     buildTypes {

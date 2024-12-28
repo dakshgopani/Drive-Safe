@@ -1,14 +1,26 @@
+import 'package:algorithm_avengers_ves_final/screens/mapscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';  // Import Firebase Core
-import 'app.dart'; // Import the app.dart file
 
-void main() async {
-  // Ensures Flutter bindings are initialized before Firebase is initialized
+void main() {
+  // Ensures Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp();
-
-  // Run the app after Firebase initialization
+  // Run the app and directly navigate to MapScreen
   runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Map App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MapScreen(), // Set MapScreen as the home screen
+    );
+  }
 }
