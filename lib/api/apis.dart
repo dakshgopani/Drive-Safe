@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String apiKey = '5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121';
   static const String apiHost = 'google-map-places.p.rapidapi.com';
-
   static Future<List<dynamic>> fetchSearchResults(String query) async {
     const String apiUrl =
         'https://google-map-places.p.rapidapi.com/maps/api/place/autocomplete/json';

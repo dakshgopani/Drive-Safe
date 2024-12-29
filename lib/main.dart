@@ -1,3 +1,4 @@
+import 'package:algorithm_avengers_ves_final/screens/convoyMode/convoy_mode_main_page.dart';
 import 'package:algorithm_avengers_ves_final/screens/mapscreen.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MapScreen(), // Set MapScreen as the home screen
+      home: MainPage(), // Set MapScreen as the home screen
     );
   }
 }
