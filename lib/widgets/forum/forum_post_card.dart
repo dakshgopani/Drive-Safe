@@ -7,10 +7,10 @@ class ForumPostCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const ForumPostCard({
-    Key? key,
+    super.key,
     required this.post,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

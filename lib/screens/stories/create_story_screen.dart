@@ -9,7 +9,7 @@ import '../../utils/validators.dart';
 import '../../utils/firebase_error_handler.dart';
 
 class CreateStoryScreen extends StatefulWidget {
-  const CreateStoryScreen({Key? key}) : super(key: key);
+  const CreateStoryScreen({super.key});
 
   @override
   _CreateStoryScreenState createState() => _CreateStoryScreenState();
@@ -25,7 +25,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   String _content = '';
   String _category = 'experience';
   List<String> _tags = [];
-  List<XFile> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
 
   final List<String> _categories = [
     'experience',

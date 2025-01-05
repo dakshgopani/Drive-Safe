@@ -4,7 +4,7 @@ import '../../services/firebase_service.dart';
 import '../../utils/validators.dart';
 
 class CreateFeedbackScreen extends StatefulWidget {
-  const CreateFeedbackScreen({Key? key}) : super(key: key);
+  const CreateFeedbackScreen({super.key});
 
   @override
   _CreateFeedbackScreenState createState() => _CreateFeedbackScreenState();

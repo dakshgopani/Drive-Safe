@@ -5,11 +5,11 @@ import '../../widgets/feedback/feedback_card.dart';
 import 'create_feedback_screen.dart';
 
 class FeedbackScreen extends StatelessWidget {
-  const FeedbackScreen({Key? key}) : super(key: key);
+  const FeedbackScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final FirebaseService _firebaseService = FirebaseService();
+    final FirebaseService firebaseService = FirebaseService();
 
     return DefaultTabController(
       length: 2,
@@ -25,8 +25,8 @@ class FeedbackScreen extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildFeedbackList(_firebaseService.getReceivedFeedback()),
-            _buildFeedbackList(_firebaseService.getSentFeedback()),
+            _buildFeedbackList(firebaseService.getReceivedFeedback()),
+            _buildFeedbackList(firebaseService.getSentFeedback()),
           ],
         ),
         floatingActionButton: FloatingActionButton(

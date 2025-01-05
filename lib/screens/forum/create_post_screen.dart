@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import '../../models/forum_post.dart';
 import '../../services/firebase_service.dart';
 import '../../utils/validators.dart';
-import '../../utils/firebase_error_handler.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  const CreatePostScreen({Key? key}) : super(key: key);
+  const CreatePostScreen({super.key});
 
   @override
   _CreatePostScreenState createState() => _CreatePostScreenState();
@@ -28,7 +27,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         backgroundColor: Colors.teal.shade600, // Darker teal for app bar
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white, // Neutral background color
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -80,8 +79,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 // Add post button
                 ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitPost,
-                  child:
-                      _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('Post'),
                   style: ElevatedButton.styleFrom(
                     padding:
                         const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.teal.shade400, // Lighter teal for button
@@ -90,14 +87,16 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             BorderRadius.circular(12)),
                   ).copyWith(
                     backgroundColor:
-                        MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                      if (states.contains(MaterialState.pressed)) {
+                        WidgetStateProperty.resolveWith<Color>(
+                            (Set<WidgetState> states) {
+                      if (states.contains(WidgetState.pressed)) {
                         return Colors.tealAccent; // Accent color on press
                       }
                       return Colors.teal.shade400; // Default button color
                     }),
                   ),
+                  child:
+                      _isSubmitting ? const CircularProgressIndicator(color: Colors.white) : const Text('Post'),
                 ),
               ],
             ),
@@ -139,7 +138,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content:
+          const SnackBar(content:
               Text('Error creating post. Please try again later.')),
         );
       } finally {

@@ -7,10 +7,10 @@ class FeedbackCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const FeedbackCard({
-    Key? key,
+    super.key,
     required this.feedback,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

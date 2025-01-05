@@ -5,11 +5,11 @@ import '../../widgets/forum/forum_post_card.dart';
 import 'create_post_screen.dart';
 
 class ForumScreen extends StatelessWidget {
-  const ForumScreen({Key? key}) : super(key: key);
+  const ForumScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final FirebaseService _firebaseService = FirebaseService();
+    final FirebaseService firebaseService = FirebaseService();
 
     return Scaffold(
       appBar: AppBar(
@@ -24,7 +24,7 @@ class ForumScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<List<ForumPost>>(
-        stream: _firebaseService.getForumPosts(),
+        stream: firebaseService.getForumPosts(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(

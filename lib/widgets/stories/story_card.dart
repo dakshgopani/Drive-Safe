@@ -6,10 +6,10 @@ class StoryCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const StoryCard({
-    Key? key,
+    super.key,
     required this.story,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

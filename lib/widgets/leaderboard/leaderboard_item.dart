@@ -7,26 +7,32 @@ class LeaderboardItem extends StatelessWidget {
   final String metric;
 
   const LeaderboardItem({
-    Key? key,
+    super.key,
     required this.user,
     required this.rank,
     required this.metric,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 3,
       child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
         leading: Stack(
           children: [
             CircleAvatar(
+              radius: 28,
               backgroundImage: NetworkImage(user.photoUrl),
             ),
             if (rank <= 3)
               Positioned(
-                right: -4,
-                top: -4,
+                right: -2,
+                top: -2,
                 child: Icon(
                   Icons.star,
                   color: _getRankColor(rank),
@@ -35,11 +41,24 @@ class LeaderboardItem extends StatelessWidget {
               ),
           ],
         ),
-        title: Text(user.displayName),
-        subtitle: Text(_getMetricValue()),
+        title: Text(
+          user.displayName,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        subtitle: Text(
+          _getMetricValue(),
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black54,
+          ),
+        ),
         trailing: Container(
-          width: 30,
-          height: 30,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: _getRankColor(rank),
             shape: BoxShape.circle,
@@ -50,6 +69,7 @@ class LeaderboardItem extends StatelessWidget {
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
           ),

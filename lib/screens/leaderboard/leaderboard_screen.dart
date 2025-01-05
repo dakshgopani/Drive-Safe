@@ -5,7 +5,7 @@ import '../../widgets/leaderboard/leaderboard_filter.dart';
 import '../../widgets/leaderboard/leaderboard_item.dart';
 
 class LeaderboardScreen extends StatefulWidget {
-  const LeaderboardScreen({Key? key}) : super(key: key);
+  const LeaderboardScreen({super.key});
 
   @override
   _LeaderboardScreenState createState() => _LeaderboardScreenState();
@@ -13,17 +13,22 @@ class LeaderboardScreen extends StatefulWidget {
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String selectedMetric = 'safetyScore';
-  String? selectedRegion;
   final FirebaseService _firebaseService = FirebaseService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Leaderboard'),
+        title: const Text(
+          'Leaderboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 4,
+        backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, color: Colors.white),
             onPressed: () => _showFilterDialog(context),
           ),
         ],
@@ -32,24 +37,22 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         children: [
           LeaderboardFilter(
             selectedMetric: selectedMetric,
-            selectedRegion: selectedRegion,
             onMetricChanged: (value) {
               setState(() => selectedMetric = value);
-            },
-            onRegionChanged: (value) {
-              setState(() => selectedRegion = value);
             },
           ),
           Expanded(
             child: StreamBuilder<List<UserProfile>>(
               stream: _firebaseService.getLeaderboard(
                 metric: selectedMetric,
-                region: selectedRegion,
               ),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(
-                    child: Text('Error: ${snapshot.error}'),
+                    child: Text(
+                      'Error: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
                   );
                 }
 
@@ -60,8 +63,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 }
 
                 final users = snapshot.data!;
-                
+
                 return ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   itemCount: users.length,
                   itemBuilder: (context, index) {
                     return LeaderboardItem(
@@ -83,12 +87,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Filter Leaderboard'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Filter Leaderboard',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButton<String>(
               value: selectedMetric,
+              isExpanded: true,
               items: const [
                 DropdownMenuItem(
                   value: 'safetyScore',
@@ -106,12 +115,24 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               onChanged: (value) {
                 if (value != null) {
                   setState(() => selectedMetric = value);
-                  Navigator.pop(context);
                 }
               },
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {});
+              Navigator.pop(context);
+            },
+            child: const Text('Apply'),
+          ),
+        ],
       ),
     );
   }

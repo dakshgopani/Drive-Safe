@@ -5,11 +5,11 @@ import '../../widgets/stories/story_card.dart';
 import 'create_story_screen.dart';
 
 class StoriesScreen extends StatelessWidget {
-  const StoriesScreen({Key? key}) : super(key: key);
+  const StoriesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final FirebaseService _firebaseService = FirebaseService();
+    final FirebaseService firebaseService = FirebaseService();
 
     return Scaffold(
       appBar: AppBar(
@@ -24,7 +24,7 @@ class StoriesScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<List<Story>>(
-        stream: _firebaseService.getStories(),
+        stream: firebaseService.getStories(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
