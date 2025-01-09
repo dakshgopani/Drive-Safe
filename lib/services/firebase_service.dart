@@ -10,6 +10,7 @@ class FirebaseService {
   
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseFirestore _firestores = FirebaseFirestore.instance;
 
 
   // Method to create a new forum post
@@ -178,22 +179,42 @@ class FirebaseService {
         .update(feedback.toJson());
   }
 
-  // Rewards Methods
-  Future<List<Reward>> getAllRewards() async {
-    final snapshot = await _firestore.collection('rewards').get();
-    return snapshot.docs.map((doc) => Reward.fromFirestore(doc)).toList();
+  
+
+  /// Fetch rewards in real-time using a Stream
+  static Stream<List<Map<String, dynamic>>> fetchRewardsStream() {
+    return _firestores.collection('rewards').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          "id": doc.id, // Document ID
+          "title": data["title"] ?? "",
+          "description": data["description"] ?? "",
+          "imageUrl": data["imageUrl"] ?? "",
+          "pointsRequired": data["pointsRequired"] ?? 0,
+        };
+      }).toList();
+    });
   }
 
-  Future<void> redeemReward(Reward reward, UserProfile userProfile) async {
-  if (userProfile.points >= reward.pointsRequired) {
-    final updatedProfile = userProfile.copyWith(
-      points: userProfile.points - reward.pointsRequired,
-      unlockedRewards: [...userProfile.unlockedRewards, reward.id],
-    );
-
-    await _firestore.collection('users').doc(userProfile.uid).update(updatedProfile.toJson());
-  } else {
-    throw Exception('Insufficient points to redeem this reward.');
+  /// Fetch rewards once (non-real-time)
+  static Future<List<Map<String, dynamic>>> fetchRewardsOnce() async {
+    try {
+      final snapshot = await _firestores.collection('rewards').get();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          "id": doc.id, // Document ID
+          "title": data["title"] ?? "",
+          "description": data["description"] ?? "",
+          "imageUrl": data["imageUrl"] ?? "",
+          "pointsRequired": data["pointsRequired"] ?? 0,
+        };
+      }).toList();
+    } catch (e) {
+      print('Error fetching rewards: $e');
+      return [];
+    }
   }
-}
+
 }
