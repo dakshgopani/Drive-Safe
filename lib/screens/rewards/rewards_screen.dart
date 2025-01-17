@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/firebase_service.dart';
-import '../../widgets/rewards/spin_wheel_widget.dart';
+import '../../widgets/rewards/reward_card.dart';
+import '../../models/rewards.dart';
 
 class RewardsScreen extends StatefulWidget {
   @override
@@ -8,9 +9,7 @@ class RewardsScreen extends StatefulWidget {
 }
 
 class _RewardsScreenState extends State<RewardsScreen> {
-  List<Map<String, dynamic>> rewards = [];
-  Stream<int>? selected;
-  int selectedRewardIndex = -1; // Default to no selection
+  List<Reward> rewards = [];
   int userPoints = 200; // Example user points (fetch dynamically if needed)
 
   @override
@@ -22,7 +21,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
   /// Fetch rewards from Firebase
   void loadRewards() async {
     try {
-      final data = await FirebaseService.fetchRewardsOnce(); // Using one-time fetch
+      final data = await FirebaseService.fetchRewardsOnce();
       setState(() {
         rewards = data;
       });
@@ -31,40 +30,26 @@ class _RewardsScreenState extends State<RewardsScreen> {
     }
   }
 
-  /// Handle the end of the spin
-  void handleSpinEnd(int index) {
-    setState(() {
-      selectedRewardIndex = index;
-    });
-
-    showDialog(
-      context: context,
-      builder: (_) => RewardDialog(
-        reward: rewards[index],
-        userPoints: userPoints,
-        onRedeem: () {
-          // Logic for redeeming the reward (deduct points, update Firebase, etc.)
-          if (userPoints >= rewards[index]['pointsRequired']) {
-            setState(() {
-              // userPoints -= rewards[index]['pointsRequired']!;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Reward redeemed successfully!'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Not enough points to redeem this reward!'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-        },
-      ),
-    );
+  /// Handle reward redemption
+  void redeemReward(Reward reward) {
+    if (userPoints >= reward.pointsRequired) {
+      setState(() {
+        userPoints -= reward.pointsRequired;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You redeemed ${reward.title}!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Not enough points to redeem ${reward.title}!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -72,6 +57,8 @@ class _RewardsScreenState extends State<RewardsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Rewards'),
+        backgroundColor: Color.fromARGB(255, 126, 191, 209),
+        elevation: 0,
         centerTitle: true,
       ),
       body: Stack(
@@ -80,7 +67,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.blue.shade900, Colors.blue.shade300],
+                colors: [const Color.fromARGB(255, 126, 191, 209), const Color.fromARGB(255, 209, 222, 228)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -88,10 +75,10 @@ class _RewardsScreenState extends State<RewardsScreen> {
           ),
           Column(
             children: [
-              SizedBox(height: 60),
+              SizedBox(height: 20),
               // Points Tracker
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -107,103 +94,28 @@ class _RewardsScreenState extends State<RewardsScreen> {
                   ],
                 ),
               ),
+              SizedBox(height: 20),
+              // Rewards List
               Expanded(
                 child: rewards.isEmpty
                     ? Center(child: CircularProgressIndicator())
-                    : SpinWheelWidget(
-                        rewards: rewards,
-                        selected: selected,
-                        onSpinEnd: handleSpinEnd,
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(8.0),
+                        itemCount: rewards.length,
+                        itemBuilder: (context, index) {
+                          final reward = rewards[index];
+                          return RewardCard(
+                            reward: reward,
+                            isUnlocked: userPoints >= reward.pointsRequired,
+                            onRedeem: () => redeemReward(reward),
+                          );
+                        },
                       ),
               ),
-              SizedBox(height: 20),
-              // Instructions
-              Text(
-                'Spin the wheel to win a reward!',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 20),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class RewardDialog extends StatelessWidget {
-  final Map<String, dynamic> reward;
-  final int userPoints;
-  final VoidCallback onRedeem;
-
-  const RewardDialog({
-    Key? key,
-    required this.reward,
-    required this.userPoints,
-    required this.onRedeem,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Center(
-        child: Text(
-          'Congratulations!',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: Colors.green,
-          ),
-        ),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(reward['imageUrl'], height: 100),
-          SizedBox(height: 10),
-          Text(
-            reward['title'],
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 5),
-          Text(reward['description']),
-          SizedBox(height: 10),
-          Text(
-            'Points Required: ${reward['pointsRequired']}',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-      actions: [
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              onRedeem(); // Call redeem callback
-            },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: userPoints >= reward['pointsRequired']
-                  ? Colors.green
-                  : Colors.grey,
-            ),
-            child: Text(
-              userPoints >= reward['pointsRequired'] ? 'Redeem' : 'Not Enough Points',
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

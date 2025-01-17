@@ -16,12 +16,18 @@ class ForumPostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      color: const Color.fromARGB(255, 218, 240, 248),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(
+          color: Color.fromARGB(255, 151, 207, 227),
+          width: 2,
+        ),
       ),
       elevation: 4,
       child: InkWell(
         onTap: onTap,
+        
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -33,9 +39,9 @@ class ForumPostCard extends StatelessWidget {
                   CircleAvatar(
                     backgroundImage: NetworkImage(post.authorPhotoUrl.isNotEmpty
                         ? post.authorPhotoUrl
-                        : 'https://www.example.com/default-profile.png'),  // Placeholder URL for broken images
+                        : 'https://static.vecteezy.com/system/resources/previews/020/765/399/non_2x/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg'),  // Placeholder URL for broken images
                     radius: 20,
-                    backgroundColor: Colors.grey[300],
+                    backgroundColor: const Color.fromARGB(255, 138, 143, 145),
                   ),
                   const SizedBox(width: 8),
                   Expanded(

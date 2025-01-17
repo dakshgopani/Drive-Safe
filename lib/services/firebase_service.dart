@@ -181,40 +181,22 @@ class FirebaseService {
 
   
 
-  /// Fetch rewards in real-time using a Stream
-  static Stream<List<Map<String, dynamic>>> fetchRewardsStream() {
-    return _firestores.collection('rewards').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          "id": doc.id, // Document ID
-          "title": data["title"] ?? "",
-          "description": data["description"] ?? "",
-          "imageUrl": data["imageUrl"] ?? "",
-          "pointsRequired": data["pointsRequired"] ?? 0,
-        };
-      }).toList();
-    });
-  }
-
-  /// Fetch rewards once (non-real-time)
-  static Future<List<Map<String, dynamic>>> fetchRewardsOnce() async {
+  static Future<List<Reward>> fetchRewardsOnce() async {
     try {
-      final snapshot = await _firestores.collection('rewards').get();
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        return {
-          "id": doc.id, // Document ID
-          "title": data["title"] ?? "",
-          "description": data["description"] ?? "",
-          "imageUrl": data["imageUrl"] ?? "",
-          "pointsRequired": data["pointsRequired"] ?? 0,
-        };
-      }).toList();
+      final querySnapshot = await _firestores.collection('rewards').get();
+      return querySnapshot.docs
+          .map((doc) => Reward.fromFirestore(doc))
+          .toList();
     } catch (e) {
       print('Error fetching rewards: $e');
       return [];
     }
   }
 
+  /// Stream rewards for real-time updates (optional)
+ Stream<List<Reward>> streamRewards() {
+    return _firestores.collection('rewards').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => Reward.fromFirestore(doc)).toList();
+    });
+  }
 }

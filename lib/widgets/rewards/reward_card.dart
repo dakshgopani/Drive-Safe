@@ -17,7 +17,7 @@ class RewardCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: Image.network(reward.imageUrl),
+        // leading: Image.network(reward.imageUrl),
         title: Text(reward.title),
         subtitle: Text(reward.description),
         trailing: Row(

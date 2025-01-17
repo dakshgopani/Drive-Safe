@@ -1,3 +1,4 @@
+import 'package:algorithm_avengers_ves_final/screens/initial/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/home_screen.dart';
@@ -32,7 +33,7 @@ class DrivingCommunityApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(), 
+      home: SplashScreen(), 
     );
   }
 }

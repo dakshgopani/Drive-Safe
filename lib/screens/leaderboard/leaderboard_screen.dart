@@ -18,14 +18,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color.fromARGB(255, 126, 191, 209),
       appBar: AppBar(
         title: const Text(
           'Leaderboard',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        elevation: 4,
-        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+        backgroundColor: const Color.fromARGB(255, 126, 191, 209),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),

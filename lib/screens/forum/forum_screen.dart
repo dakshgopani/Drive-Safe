@@ -14,6 +14,7 @@ class ForumScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Community Forum'),
+        backgroundColor: Color.fromARGB(255, 169, 218, 237),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),

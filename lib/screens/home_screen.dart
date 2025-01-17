@@ -17,7 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
   
   final List<Widget> _screens = [
     const ForumScreen(),
-    const StoriesScreen(),
     RewardsScreen(),
     const LeaderboardScreen(),
   ];
@@ -42,10 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.forum),
             label: 'Forum',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_stories),
-            label: 'Stories',
-          ),
+          // NavigationDestination(
+          //   icon: Icon(Icons.auto_stories),
+          //   label: 'Stories',
+          // ),
           NavigationDestination(
             icon: Icon(Icons.wallet_giftcard),
             label: 'Rewards',
