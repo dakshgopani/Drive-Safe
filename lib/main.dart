@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 void main() {
   // Ensures Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
-
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+  });
   // Run the app and directly navigate to MapScreen
   runApp(const MyApp());
 }
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MainPage(), // Set MapScreen as the home screen
+      home: const MapScreen(), // Set MapScreen as the home screen
     );
   }
 }

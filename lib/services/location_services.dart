@@ -52,15 +52,15 @@ class LocationService {
 
     // Get the current location using GPS class
     try {
-      Position? position = await gps.getLastKnownPosition();
+
 
       // If no last known position is available, get the current position
-      position ??= await gps.getCurrentPosition();
-
+      Position? position = await gps.getCurrentPosition();
+      print('Accuracy: ${position?.accuracy} meters');
       if (position == null) {
         return null; // No location available
       }
-
+      print("Location:$position");
       final newLocation = GeoPoint(
         latitude: position.latitude,
         longitude: position.longitude,
