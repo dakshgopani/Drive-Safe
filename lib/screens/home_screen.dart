@@ -1,3 +1,4 @@
+import 'package:algorithm_avengers_ves_final/screens/community_chat/community_chat_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/rewards/rewards_screen.dart';
 import 'package:flutter/material.dart';
 import 'forum/forum_screen.dart';
@@ -16,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   
   final List<Widget> _screens = [
-    const ForumScreen(),
+    CommunityChatScreen(),
     RewardsScreen(),
     const LeaderboardScreen(),
   ];
@@ -39,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.forum),
-            label: 'Forum',
+            label: 'Community Chat',
           ),
           // NavigationDestination(
           //   icon: Icon(Icons.auto_stories),
