@@ -51,6 +51,7 @@ dependencies:
   url_launcher: ^6.3.1
   flutter_tts: ^4.2.1
   flutter_compass: ^0.8.1
+  sliding_up_panel: ^2.0.0+1
 dev_dependencies:
   flutter_test:
     sdk: flutter

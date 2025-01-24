@@ -9,7 +9,7 @@ class LocationButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.5),
@@ -22,7 +22,7 @@ class LocationButton extends StatelessWidget {
           onPressed: onPressed,
           tooltip: 'Center on current location',
           backgroundColor: Colors.white.withOpacity(0.8),
-          child: Icon(Icons.my_location, color: Colors.blue),
+          child: Icon(Icons.my_location, color: Colors.blue,size: 30,),
         ),
       );
   }

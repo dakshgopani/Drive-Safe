@@ -29,7 +29,7 @@ class ZoomButtons extends StatelessWidget {
 
   Widget _buildZoomButton({required IconData icon, required VoidCallback onPressed}) {
     return Container(
-      margin: EdgeInsets.only(bottom: 10),
+      margin: EdgeInsets.only(bottom: 5),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(12),
@@ -47,7 +47,7 @@ class ZoomButtons extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
           child: IconButton(
             onPressed: onPressed,
-            icon: Icon(icon, color: Colors.blue),
+            icon: Icon(icon, color: Colors.blueAccent,size: 30,),
           ),
         ),
       ),
