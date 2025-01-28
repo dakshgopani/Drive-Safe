@@ -8,22 +8,22 @@ class LocationButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 10,
-              offset: Offset(0, 5),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: onPressed,
-          tooltip: 'Center on current location',
-          backgroundColor: Colors.white.withOpacity(0.8),
-          child: Icon(Icons.my_location, color: Colors.blue,size: 30,),
-        ),
-      );
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: onPressed,
+        tooltip: 'Center on current location',
+        backgroundColor: Colors.white.withOpacity(0.8),
+        child: Icon(Icons.my_location, color: Colors.blue,size: 30,),
+      ),
+    );
   }
 }

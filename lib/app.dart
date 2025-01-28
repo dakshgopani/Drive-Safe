@@ -1,104 +1,51 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:algorithm_avengers_ves_final/screens/home_screen.dart';
+import 'package:algorithm_avengers_ves_final/screens/initial/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'screens/welcome_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
+import 'firebase_options.dart'; // Import the generated file
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _initializeFirebase(); // Use your custom Firebase initialization
+  runApp(MyApp());
+}
+
+Future<void> _initializeFirebase() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Use platform-specific options
+  );
+}
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,  // Hides the debug banner
-      title: 'Firebase Test App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomeScreen(),  // Set the HomeScreen as the initial screen
-    );
-  }
-}
+      title: 'Multi-screen App',
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/', // Set the initial route to WelcomeScreen
+      routes: {
+        '/': (context) => SplashScreen(), // Welcome Screen (initial screen)
+        '/login': (context) => LoginScreen(), // Login screen
+        '/signup': (context) => SignUpScreen(), // Sign-up screen
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/home') {
+          final args = settings.arguments as Map<String, dynamic>; // Accept arguments
+          final userId = args['userId'] as String; // Ensure you're extracting the correct data
+          final userName = args['userName'] as String? ?? 'User'; // Fallback to 'User' if no name provided
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final FirebaseAuth auth = FirebaseAuth.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  String displayName = 'No user signed in';
-  String firestoreMessage = 'No data fetched from Firestore';
-
-  @override
-  void initState() {
-    super.initState();
-    // Call the test connectivity method
-    testFirebaseConnectivity();
-  }
-
-  // Test Firebase Authentication and Firestore connectivity
-  Future<void> testFirebaseConnectivity() async {
-    try {
-      // Check if user is signed in
-      User? user = auth.currentUser;
-      if (user != null) {
-        setState(() {
-          displayName = 'User signed in: ${user.displayName}';
-        });
-      } else {
-        setState(() {
-          displayName = 'No user signed in';
-        });
-      }
-
-      // Test Firestore: Add a document
-      await firestore.collection('test').doc('testDoc').set({
-        'message': 'Firebase is connected!',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      // Retrieve data from Firestore to check if it's stored correctly
-      DocumentSnapshot snapshot = await firestore.collection('test').doc('testDoc').get();
-      if (snapshot.exists) {
-        setState(() {
-          firestoreMessage = 'Firestore Document Data: ${snapshot.data()}';
-        });
-      } else {
-        setState(() {
-          firestoreMessage = 'No data found in Firestore';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        firestoreMessage = 'Error with Firebase: $e';
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Firebase Connectivity Test"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(displayName, style: const TextStyle(fontSize: 20)),
-            const SizedBox(height: 20),
-            Text(firestoreMessage, style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: testFirebaseConnectivity,  // Re-run the test when pressed
-              child: const Text('Test Firebase Again'),
+          return MaterialPageRoute(
+            builder: (context) => HomeScreen(
+              userName: userName, // Pass the user name dynamically
+              email: args['email'] ?? "No email", // Pass the email dynamically
             ),
-          ],
-        ),
-      ),
+          );
+        }
+        return null; // Return null for unknown routes
+      },
     );
   }
 }

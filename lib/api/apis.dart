@@ -68,7 +68,11 @@ class ApiService {
     // Construct the URI with the start and destination coordinates
     final Uri uri = Uri.parse(
         '$directionsUrl/${startLocation.longitude},${startLocation.latitude};${destinationLocation.longitude},${destinationLocation.latitude}?overview=full&geometries=geojson&steps=true');
+<<<<<<< HEAD
 print("uri:$uri");
+=======
+    print("uri:$uri");
+>>>>>>> dd08c1b (Deliverable first)
     try {
       final response = await http.get(uri);
 

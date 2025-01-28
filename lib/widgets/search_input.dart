@@ -142,42 +142,42 @@ class _SearchInputState extends State<SearchInput> {
     Color prefixIconColor = Colors.blue, // Added optional color for prefix icon
   }) {
     return GestureDetector(
-        onTap: () {
-      FocusScope.of(context).requestFocus(focusNode);
-    },
+      onTap: () {
+        FocusScope.of(context).requestFocus(focusNode);
+      },
       child:Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: TextField(
-        controller: controller,
-        focusNode: focusNode,
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey[600]),
-          prefixIcon: Icon(prefixIcon, color: prefixIconColor),
-          suffixIcon: controller.text.isNotEmpty || focusNode.hasFocus
-              ? IconButton(
-            icon: Icon(Icons.clear, color: Colors.grey),
-            onPressed: () {
-              controller.clear();
-              widget.searchResults.clear();
-              widget.deleteRoadandMarker();
-            },
-          )
-              : null,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: TextField(
+          controller: controller,
+          focusNode: focusNode,
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: Colors.grey[600]),
+            prefixIcon: Icon(prefixIcon, color: prefixIconColor),
+            suffixIcon: controller.text.isNotEmpty || focusNode.hasFocus
+                ? IconButton(
+              icon: Icon(Icons.clear, color: Colors.grey),
+              onPressed: () {
+                controller.clear();
+                widget.searchResults.clear();
+                widget.deleteRoadandMarker();
+              },
+            )
+                : null,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
         ),
       ),
-    ),
     );
   }
 
   Widget _buildSearchResults(BuildContext context) {
-      return Container(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.4 - MediaQuery.of(context).viewInsets.bottom,
@@ -193,58 +193,58 @@ class _SearchInputState extends State<SearchInput> {
           ),
         ],
       ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: ListView.separated(
-            shrinkWrap: true,
-            padding: const EdgeInsets.all(8),
-            itemCount: widget.searchResults.length + (_activeController == widget.startController ? 1 : 0), // Add 1 if it's the start controller
-            separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
-            itemBuilder: (context, index) {
-              if (_activeController == widget.startController && index == 0) {
-                // If it's the start controller and this is the first item, show "Your Location"
-                return ListTile(
-                  onTap: () {
-                    // Handle tap for "Your Location"
-                    // You might want to call a specific function or set a specific location
-                    widget.selectSearchResult({'description': 'Your Location'}, _activeController!);
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(8),
+          itemCount: widget.searchResults.length + (_activeController == widget.startController ? 1 : 0), // Add 1 if it's the start controller
+          separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey[200]),
+          itemBuilder: (context, index) {
+            if (_activeController == widget.startController && index == 0) {
+              // If it's the start controller and this is the first item, show "Your Location"
+              return ListTile(
+                onTap: () {
+                  // Handle tap for "Your Location"
+                  // You might want to call a specific function or set a specific location
+                  widget.selectSearchResult({'description': 'Your Location'}, _activeController!);
 
-                  },
-                  leading: Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(Icons.my_location, color: Colors.blue), // Icon for "Your Location"
+                },
+                leading: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  title: Text('Your Location', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
-                );
-              } else {
-                // For other items in search results
-                final result = widget.searchResults[index - (_activeController == widget.startController ? 1 : 0)]; // Adjust index
-                return ListTile(
-                  onTap: () {
-                    // Ensure the result goes into the active controller
-                    widget.selectSearchResult(result, _activeController!);
-                    widget.checkAndShowBottomSheet(context,widget.startLocationTracking);
-                  },
-                  leading: Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(Icons.location_on_outlined, color: Colors.blue),
+                  child: Icon(Icons.my_location, color: Colors.blue), // Icon for "Your Location"
+                ),
+                title: Text('Your Location', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
+              );
+            } else {
+              // For other items in search results
+              final result = widget.searchResults[index - (_activeController == widget.startController ? 1 : 0)]; // Adjust index
+              return ListTile(
+                onTap: () {
+                  // Ensure the result goes into the active controller
+                  widget.selectSearchResult(result, _activeController!);
+                  widget.checkAndShowBottomSheet(context,widget.startLocationTracking);
+                },
+                leading: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  title: Text(result['description']!, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
-                );
-              }
-            },
-          ),
+                  child: Icon(Icons.location_on_outlined, color: Colors.blue),
+                ),
+                title: Text(result['description']!, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
+              );
+            }
+          },
         ),
+      ),
 
-      );
+    );
   }
 
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-
 import 'package:flutter_tts/flutter_tts.dart';
 
 class TurnByTurnNavigationUI extends StatelessWidget {

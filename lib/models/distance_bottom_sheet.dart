@@ -26,7 +26,7 @@ class DistanceBottomSheet extends StatelessWidget {
       initialChildSize: 0.6, // Adjust initial height
       minChildSize: 0.05, // Minimum height to keep it partially open
       maxChildSize: 0.9,
-        builder: (context, scrollController) {
+      builder: (context, scrollController) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: const BoxDecoration(
