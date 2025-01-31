@@ -497,8 +497,8 @@ class _MapScreenState extends State<MapScreen> {
                 left: 16,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                   backgroundColor: Colors.transparent, // Transparent background
-                  //  backgroundColor: Colors.blueAccent, // Button color
+                   //backgroundColor: Colors.transparent, // Transparent background
+                   backgroundColor: Colors.blueAccent, // Button color
                     shape: RoundedRectangleBorder(
                       borderRadius:
                           BorderRadius.circular(16), // Rounded corners
