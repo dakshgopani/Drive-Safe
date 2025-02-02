@@ -12,10 +12,18 @@ class GPS {
 
   // Start location stream
   Future<void> startPositionStream(Function(Position) callback) async {
-    bool permissionGranted = await requestPermission();
-    if (!permissionGranted) throw 'Location permission denied';
+    LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation, // Use highest accuracy
+      distanceFilter: 5, // Minimum distance (in meters) to trigger updates// Optional: Time limit for better fixes
+    );
 
-    positionStream = Geolocator.getPositionStream().listen(callback) as StreamSubscription<Position>?;
+    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) {
+      if (position.accuracy <= 10) { // Filter for high-accuracy locations
+        callback(position);
+      } else {
+        print('Skipping low accuracy location: ${position.accuracy}');
+      }
+    });
   }
 
   // Stop location stream
@@ -27,9 +35,11 @@ class GPS {
   Future<Position?> getCurrentPosition() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
+
         locationSettings: LocationSettings(
           accuracy: LocationAccuracy.bestForNavigation,
-          distanceFilter: 10, // Only update if moved by at least 10 meters
+          distanceFilter: 10,
+          // Only update if moved by at least 10 meters
         ),
       );
       return position;

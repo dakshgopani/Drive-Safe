@@ -11,26 +11,31 @@ class MapView extends StatelessWidget {
     return OSMFlutter(
       controller: mapController,
       osmOption: OSMOption(
+        enableRotationByGesture: true,
+
         userTrackingOption: UserTrackingOption(
-          enableTracking: true,
-          unFollowUser: false,
+          enableTracking: false,
+          unFollowUser: true,
         ),
+
         zoomOption: ZoomOption(
           initZoom: 15,
           minZoomLevel: 3,
           maxZoomLevel: 19,
           stepZoom: 1.0,
         ),
-        userLocationMarker: UserLocationMaker(
-          personMarker: MarkerIcon(
-            icon: Icon(Icons.location_on, color: Colors.blue, size: 150),
-          ),
-          directionArrowMarker: MarkerIcon(
-            icon: Icon(Icons.double_arrow, size: 150, color: Colors.transparent),
-          ),
-        ),
+        // userLocationMarker: UserLocationMaker(
+        //   personMarker: MarkerIcon(
+        //     icon: Icon(Icons.location_on, color: Colors.blue, size: 150),
+        //   ),
+        //   directionArrowMarker: MarkerIcon(
+        //     icon: Icon(Icons.navigation, size: 150, color: Colors.blue),
+        //   ),
+        // ),
         roadConfiguration: RoadOption(roadColor: Colors.yellowAccent),
+
       ),
+
     );
   }
 }

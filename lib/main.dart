@@ -1,27 +1,14 @@
-import 'package:algorithm_avengers_ves_final/screens/convoyMode/convoy_mode_main_page.dart';
-import 'package:algorithm_avengers_ves_final/screens/mapscreen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';  // Import Firebase Core
+import 'app.dart'; // Import the app.dart file
 
-void main() {
-  // Ensures Flutter bindings are initialized
+void main() async {
+  // Ensures Flutter bindings are initialized before Firebase is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Run the app and directly navigate to MapScreen
-  runApp(const MyApp());
-}
+  // Initialize Firebase
+  await Firebase.initializeApp();
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Map App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MainPage(), // Set MapScreen as the home screen
-    );
-  }
+  // Run the app after Firebase initialization
+  runApp(MyApp());
 }

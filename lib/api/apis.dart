@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 
 
 class ApiService {
-  static const String apiKey = '5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121';
+  static const String apiKey = '740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af';
+  //5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121
   static const String apiHost = 'google-map-places.p.rapidapi.com';
   static Future<List<dynamic>> fetchSearchResults(String query) async {
     const String apiUrl =
@@ -60,28 +61,26 @@ class ApiService {
       throw Exception('Error fetching place details: $e');
     }
   }
-
   static Future<List<dynamic>> fetchDirections(
       GeoPoint startLocation, GeoPoint destinationLocation) async {
-    const String directionsUrl =
-        'https://google-map-places.p.rapidapi.com/maps/api/directions/json';
+    // OSRM API URL for routing
+    const String directionsUrl = 'http://router.project-osrm.org/route/v1/driving';
 
+    // Construct the URI with the start and destination coordinates
     final Uri uri = Uri.parse(
-        '$directionsUrl?origin=${startLocation.latitude},${startLocation.longitude}'
-            '&destination=${destinationLocation.latitude},${destinationLocation.longitude}'
-            '&mode=driving&language=en');
-
+        '$directionsUrl/${startLocation.longitude},${startLocation.latitude};${destinationLocation.longitude},${destinationLocation.latitude}?overview=full&geometries=geojson&steps=true');
+    print("uri:$uri");
     try {
-      final response = await http.get(
-        uri,
-        headers: {
-          'x-rapidapi-key': apiKey,
-          'x-rapidapi-host': apiHost,
-        },
-      );
+      final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body)['routes'][0]['overview_polyline']['points'];
+        // Decode the response body
+        final data = jsonDecode(response.body);
+        if (data['routes'].isNotEmpty) {
+          return data['routes']; // Return the routes array
+        } else {
+          throw Exception('No routes found');
+        }
       } else {
         throw Exception('Failed to fetch directions: ${response.body}');
       }

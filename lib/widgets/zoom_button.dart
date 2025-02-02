@@ -11,7 +11,7 @@ class ZoomButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return
-     Column(
+      Column(
         children: [
           // Zoom In Button
           _buildZoomButton(
