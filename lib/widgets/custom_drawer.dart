@@ -1,3 +1,4 @@
+import 'package:algorithm_avengers_ves_final/screens/driving_monitor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/car_game_page.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/community_chat_screen.dart';
@@ -45,6 +46,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
     DrawerItem(
       title: "Record Drive",
       icon: Icons.fiber_manual_record_outlined,
+       route: DrivingMonitorScreen(),
       color: Colors.blueAccent,
       category: "Drive & Analysis",
     ),
