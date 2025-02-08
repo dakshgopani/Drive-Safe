@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../models/user_profile.dart';
 
@@ -16,61 +15,96 @@ class LeaderboardItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: _getGradientColors(rank),
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueAccent.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      elevation: 3,
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: Stack(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundImage: NetworkImage(user.photoUrl),
-            ),
-            if (rank <= 3)
-              Positioned(
-                right: -2,
-                top: -2,
-                child: Icon(
-                  Icons.star,
-                  color: _getRankColor(rank),
-                  size: 20,
+      child: Card(
+        elevation: 0,
+        color: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(12),
+          leading: Hero(
+            tag: 'user_avatar_${user.displayName}',
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(user.photoUrl),
+                  backgroundColor: Colors.white,
                 ),
-              ),
-          ],
-        ),
-        title: Text(
-          user.displayName,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+                if (rank <= 3)
+                  Positioned(
+                    right: -2,
+                    bottom: -2,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.star,
+                        color: _getRankColor(rank),
+                        size: 24,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
-        subtitle: Text(
-          _getMetricValue(),
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black54,
+          title: Text(
+            user.displayName,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-        ),
-        trailing: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: _getRankColor(rank),
-            shape: BoxShape.circle,
+          subtitle: Text(
+            _getMetricValue(),
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white70,
+            ),
           ),
-          child: Center(
-            child: Text(
-              '#$rank',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+          trailing: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '#$rank',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
             ),
           ),
@@ -102,6 +136,19 @@ class LeaderboardItem extends StatelessWidget {
         return Colors.brown[300]!;
       default:
         return Colors.blueAccent;
+    }
+  }
+
+  List<Color> _getGradientColors(int rank) {
+    switch (rank) {
+      case 1:
+        return [Colors.amber.shade300, Colors.amber.shade600];
+      case 2:
+        return [Colors.grey.shade400, Colors.grey.shade600];
+      case 3:
+        return [Colors.brown.shade300, Colors.brown.shade500];
+      default:
+        return [Colors.blueAccent.shade200, Colors.blueAccent.shade400];
     }
   }
 }

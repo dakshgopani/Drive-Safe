@@ -345,8 +345,6 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
         ],
       ),
     );
-
-    // ... rest of the build method remains the same ...
   }
 
   @override

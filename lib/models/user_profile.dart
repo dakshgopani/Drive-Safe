@@ -62,7 +62,7 @@ class UserProfile extends ChangeNotifier {
     return UserProfile(
       uid: doc.id,
       displayName: data['displayName'] ?? '',
-      photoUrl: data['photoUrl'] ?? '',
+      photoUrl: data['photoUrl'] ?? 'https://i.pravatar.cc/150',
       safetyScore: (data['safetyScore'] ?? 0.0).toDouble(),
       ecoScore: (data['ecoScore'] ?? 0.0).toDouble(),
       totalDistance: data['totalDistance'] ?? 0,
