@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import './profile_screen.dart';
 import '../widgets/custom_drawer.dart';
-import 'mapscreen.dart';
+import 'map_screen.dart';
 import 'welcome_screen.dart';
 
 class HomeScreen extends StatefulWidget {
