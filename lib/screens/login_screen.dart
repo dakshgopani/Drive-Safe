@@ -107,6 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => HomeScreen(
+                  userId: user.uid ?? "No Id",
                   userName: user.displayName ?? "User",
                   // Pass the user name dynamically
                   email: user.email ?? "No email", // Pass the email dynamically
@@ -160,6 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => HomeScreen(
+              userId: user.uid ?? "No Id",
               userName: user.displayName ?? "User",
               // Pass the user name dynamically
               email: user.email ?? "No email", // Pass the email dynamically

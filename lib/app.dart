@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
 
           return MaterialPageRoute(
             builder: (context) => HomeScreen(
+              userId: userId,
               userName: userName, // Pass the user name dynamically
               email: args['email'] ?? "No email", // Pass the email dynamically
             ),

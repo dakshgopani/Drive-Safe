@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:algorithm_avengers_ves_final/screens/drawer/driving_behaviour_analysis.dart';
+import 'package:algorithm_avengers_ves_final/screens/drawer/rewards_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/distance_bottom_sheet.dart';
+import '../services/trip_service.dart';
 import '../utils/constants.dart';
 import '../api/apis.dart';
 import '../services/location_services.dart';
@@ -15,6 +17,10 @@ import '../widgets/location_button.dart';
 import '../widgets/turn_by_turn.dart';
 import '../widgets/zoom_button.dart';
 import '../widgets/search_input.dart';
+import 'package:confetti/confetti.dart';
+
+// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -45,6 +51,9 @@ class _MapScreenState extends State<MapScreen> {
   int currentStepIndex = 1;
   String _instruction_text = "";
   double _speed = 0.0;
+  bool _tripCompleted = false; // Flag to prevent repeated pop-ups
+  String? userId = FirebaseAuth.instance.currentUser?.uid;
+
 
   @override
   void initState() {
@@ -61,6 +70,7 @@ class _MapScreenState extends State<MapScreen> {
     _destinationController.dispose();
     _mapController.dispose();
     _stopLocationTracking();
+    _positionStream?.cancel();
     super.dispose();
   }
 
@@ -72,12 +82,12 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         _startLocation = location;
         _startController.text =
-            "Your location"; // Display text in the controller
+        "Your location"; // Display text in the controller
       });
 
       await _mapController.addMarker(
         _startLocation!,
-        markerIcon: MarkerIcon(
+        markerIcon: const MarkerIcon(
           icon: Icon(Icons.location_on,
               color: Colors.blueAccent,
               size: 40), // Use a different icon for current location
@@ -135,8 +145,8 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  Future<void> _selectSearchResult(
-      dynamic result, TextEditingController controller) async {
+  Future<void> _selectSearchResult(dynamic result,
+      TextEditingController controller) async {
     try {
       // Check if the result is "Your Location"
       if (result['description'] == "Your Location") {
@@ -162,7 +172,7 @@ class _MapScreenState extends State<MapScreen> {
         // Add a marker for the current location
         await _mapController.addMarker(
           currentLocation,
-          markerIcon: MarkerIcon(
+          markerIcon: const MarkerIcon(
             icon: Icon(Icons.location_on,
                 color: Colors.blueAccent,
                 size: 40), // Use a different icon for current location
@@ -190,9 +200,8 @@ class _MapScreenState extends State<MapScreen> {
         });
 
         // Determine marker color based on which controller is used
-        Color markerColor = (controller == _startController)
-            ? Colors.blueAccent
-            : Colors.red;
+        Color markerColor =
+        (controller == _startController) ? Colors.blueAccent : Colors.red;
 
         // Add a marker for the selected place with appropriate color
         await _mapController.addMarker(
@@ -238,11 +247,12 @@ class _MapScreenState extends State<MapScreen> {
       if (routes.isNotEmpty) {
         // Get the polyline from the first route response
         List<dynamic> coordinates = routes[0]['geometry']
-            ['coordinates']; // This is a List<List<double>>
+        ['coordinates']; // This is a List<List<double>>
 
         // Convert coordinates into GeoPoints
         List<GeoPoint> decodedGeoPoints = coordinates
-            .map((point) => GeoPoint(
+            .map((point) =>
+            GeoPoint(
                 latitude: point[1].toDouble(), longitude: point[0].toDouble()))
             .toList();
 
@@ -259,7 +269,8 @@ class _MapScreenState extends State<MapScreen> {
             roadColor: Colors.blueAccent,
             roadBorderColor: Colors.black,
             roadBorderWidth: 2.5,
-            zoomInto: true,
+            zoomInto: false,
+            // earlier it was true
             isDotted: false,
           ),
         );
@@ -274,11 +285,15 @@ class _MapScreenState extends State<MapScreen> {
 // Function to decode polyline (you may already have this)
   List<List<num>> decodePolyline(String encoded) {
     List<List<num>> coordinates = [];
-    int index = 0, len = encoded.length;
-    int lat = 0, lng = 0;
+    int index = 0,
+        len = encoded.length;
+    int lat = 0,
+        lng = 0;
 
     while (index < len) {
-      int b, shift = 0, result = 0;
+      int b,
+          shift = 0,
+          result = 0;
       do {
         b = encoded.codeUnitAt(index++) - 63;
         result |= (b & 0x1f) << shift;
@@ -322,19 +337,304 @@ class _MapScreenState extends State<MapScreen> {
 
   StreamSubscription<Position>? _positionStream;
 
+
   void startLocationTracking() {
+    const double thresholdDistance = 10.0; // Trip completes within 10 meters
+
+    double totalDistanceTraveled = 0.0;
+    double lastKnownSpeed = 0.0;
+    double totalSpeed = 0.0;
+    int speedCount = 0;
+    DateTime? tripStartTime;
+    Position? previousPosition;
+
+    tripStartTime = DateTime.now();
+
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position position) {
-      // Handle the updated position here
-      print('Current Position: ${position.latitude}, ${position.longitude}');
-      setState(() {
-        isNavigating = true;
-        // _speed = position.speed * 3.6;
-      });
-      checkForNextTurn(position);
-    });
+          // ---------- DYNAMIC TRIP TRACKING ----------
+          // GeoPoint userLocation = GeoPoint(
+          //   latitude: position.latitude,
+          //   longitude: position.longitude,
+          // );
+          //
+          // GeoPoint? _startLocation; // Store the first recorded position
+          //
+          // GeoPoint destination = _destinationLocation ?? GeoPoint(latitude: 19.1889541, longitude: 72.835543);
+          //
+          // double dynamicDistance = Geolocator.distanceBetween(
+          //   userLocation.latitude,
+          //   userLocation.longitude,
+          //   destination.latitude,
+          //   destination.longitude,
+          // );
+          //
+          // if (_startLocation == null) {
+          //   _startLocation = GeoPoint(
+          //     latitude: position.latitude,
+          //     longitude: position.longitude,
+          //   );
+          //   print("🚀 Start Location Captured: $_startLocation");
+          // }
+          //
+          //
+          // print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
+          //
+          // setState(() {
+          //   isNavigating = true;
+          // });
+          //
+          // // Speed tracking
+          // double speed = position.speed; // Speed in meters per second
+          // lastKnownSpeed = speed * 3.6; // Convert to km/h
+          // totalSpeed += lastKnownSpeed;
+          // speedCount++;
+          //
+          // if (previousPosition != null) {
+          //   double segmentDistance = Geolocator.distanceBetween(
+          //     previousPosition!.latitude,
+          //     previousPosition!.longitude,
+          //     position.latitude,
+          //     position.longitude,
+          //   );
+          //   totalDistanceTraveled += segmentDistance;
+          // }
+          // previousPosition = position;
+          //
+          // checkForNextTurn(position);
+          //
+          // if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
+          //   _tripCompleted = true;
+          //
+          //   Duration tripDuration = DateTime.now().difference(tripStartTime!);
+          //   double avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
+          //
+          //   print("🎉 Trip Completed - Dynamic Data");
+          //
+          //   // Save dynamic trip data to Firestore
+          //   TripService(
+          //     tripStartTime: tripStartTime!,
+          //     totalDistanceTraveled: totalDistanceTraveled,
+          //     totalSpeed: totalSpeed,
+          //     speedCount: speedCount,
+          //     startLocation: {
+          //       "latitude": _startLocation!.latitude,
+          //       "longitude": _startLocation!.longitude,
+          //     }, // ✅ Correct start location
+          //     destination: {
+          //       "latitude": destination.latitude,
+          //       "longitude": destination.longitude,
+          //     },
+          //   ).saveTripDataToFirestore().then((tripId) {
+          // _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
+          // });
+          //
+          //
+          // } else {
+          //   print("🚗 Trip NOT Completed Yet (Live)");
+          // }
+
+          // ---------- STATIC TESTING ----------
+          const double simulatedLat = 19.1889541;
+          const double simulatedLng = 72.835543;
+          GeoPoint? _startLocation; // Store the first recorded position
+
+          GeoPoint simulatedSource = GeoPoint(
+              latitude: simulatedLat, longitude: simulatedLng);
+          GeoPoint staticDestination = GeoPoint(
+              latitude: 19.1889541, longitude: 72.835543);
+
+          double staticDistance = Geolocator.distanceBetween(
+            simulatedSource.latitude,
+            simulatedSource.longitude,
+            staticDestination.latitude,
+            staticDestination.longitude,
+          );
+
+          if (_startLocation == null) {
+            _startLocation = GeoPoint(
+              latitude: position.latitude,
+              longitude: position.longitude,
+            );
+            print("🚀 Start Location Captured: $_startLocation");
+          }
+
+          print('📏 Distance to Destination (Static Test): ${staticDistance
+              .toStringAsFixed(2)} meters');
+
+          if (staticDistance <= thresholdDistance && !_tripCompleted) {
+            print("🎉 Trip Completed - Static Test");
+            // _showTripCompletedPopup();
+            _tripCompleted = true; // ✅ Prevent multiple pop-ups
+
+            Duration staticTripDuration = Duration(minutes: 15, seconds: 20);
+            double staticAvgSpeed = 45.0;
+            double staticTotalDistance = 5000.0; // Dummy total distance (5 km)
+
+            // Save static trip data to Firestore
+            TripService(
+              tripStartTime: tripStartTime!,
+              totalDistanceTraveled: staticTotalDistance,
+              totalSpeed: staticAvgSpeed * 15,
+              // Dummy speed calculations
+              speedCount: 15,
+              // Dummy speed count
+              startLocation: {
+                "latitude": _startLocation!.latitude,
+                "longitude": _startLocation!.longitude,
+              },
+              // ✅ Correct start location
+              destination: {
+                "latitude": staticDestination.latitude,
+                "longitude": staticDestination.longitude,
+              },
+            ).saveTripDataToFirestore().then((tripId) {
+              _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
+            });
+          } else {
+            print("🚗 Trip NOT Completed Yet (Static Test)");
+          }
+
+        });
   }
+
+  void _navigateToRewardsScreen(String userId, String tripId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RewardsSystem(userId: userId, requestId: tripId),
+      ),
+    );
+  }
+
+
+  // **Function to show the trip completed pop-up**
+
+  void _showTripCompletedPopup(String userId, String tripId) {
+    ConfettiController confettiController = ConfettiController(
+        duration: const Duration(seconds: 3));
+
+    confettiController.play(); // Start confetti animation
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.transparent,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 🎉 Confetti Animation
+              Positioned(
+                top: 0,
+                child: ConfettiWidget(
+                  confettiController: confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  // Burst effect
+                  emissionFrequency: 0.03,
+                  // More frequent confetti bursts
+                  numberOfParticles: 50,
+                  // Increase for more confetti
+                  gravity: 0.3,
+                  // Slower fall effect
+                  shouldLoop: false,
+                  colors: [
+                    Colors.redAccent,
+                    Colors.greenAccent,
+                    Colors.blueAccent,
+                    Colors.orangeAccent,
+                    Colors.purpleAccent,
+                  ],
+                ),
+              ),
+
+              // 🎊 Pop-Up UI
+              Container(
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blueAccent.shade200, Colors.blueAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.celebration, // 🎉 Celebration icon
+                      color: Colors.white,
+                      size: 80,
+                    ),
+
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Trip Completed!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Text(
+                      "You have successfully reached your destination.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // View Rewards Button
+                    ElevatedButton(
+                      onPressed: () {
+                        confettiController.stop(); // Stop confetti animation
+                        Navigator.pop(context); // Close pop-up
+                        _navigateToRewardsScreen(
+                            userId, tripId); // ✅ Go to Rewards Screen
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blueAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 30),
+                        elevation: 5,
+                      ),
+                      child: const Text(
+                        "View Rewards 🎁",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 
   void stopLocationTracking() {
     setState(() {
@@ -345,12 +645,12 @@ class _MapScreenState extends State<MapScreen> {
 
   void checkForNextTurn(Position userPosition) {
     const double thresholdDistance =
-        50.0; // Distance in meters to consider "close enough" to a turn
+    50.0; // Distance in meters to consider "close enough" to a turn
     const double notificationDistance =
-        200.0; // Distance to notify user before turn
+    200.0; // Distance to notify user before turn
     if (routes.isNotEmpty && routes[0]['legs'].isNotEmpty) {
       List<dynamic> steps =
-          routes[0]['legs'][0]['steps']; // Access steps from the first leg
+      routes[0]['legs'][0]['steps']; // Access steps from the first leg
 
       if (steps.isEmpty || currentStepIndex >= steps.length) {
         print('No valid route steps found or all steps processed.');
@@ -359,7 +659,7 @@ class _MapScreenState extends State<MapScreen> {
 
       var step = steps[currentStepIndex];
       List<double> maneuverLocation =
-          List<double>.from(step['maneuver']['location']);
+      List<double>.from(step['maneuver']['location']);
       double distanceToTurn = Geolocator.distanceBetween(
         userPosition.latitude,
         userPosition.longitude,
@@ -389,7 +689,7 @@ class _MapScreenState extends State<MapScreen> {
         // Notify user if they are within notification distance
         setState(() {
           _instruction_text =
-              "Prepare for a $_instruction turn onto $_laneName";
+          "Prepare for a $_instruction turn onto $_laneName";
         });
       }
     } else {
@@ -397,8 +697,8 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _checkAndShowBottomSheet(
-      BuildContext context, void Function() startLocationTracking) {
+  void _checkAndShowBottomSheet(BuildContext context,
+      void Function() startLocationTracking) {
     // Show the bottom sheet
     showBottomSheet(
       context: context,
@@ -412,7 +712,7 @@ class _MapScreenState extends State<MapScreen> {
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               // Pass null to show loading state
-              return DistanceBottomSheet(placeDetails: null);
+              return const DistanceBottomSheet(placeDetails: null);
             } else {
               final fetchedPlaceDetails = snapshot.data;
               print("$fetchedPlaceDetails");
@@ -430,7 +730,7 @@ class _MapScreenState extends State<MapScreen> {
                     title: const Text(
                       'Invalid Place Details',
                       style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     content: const Text(
                       'We could not fetch the details for the selected place. Click retry to try again.',
@@ -485,90 +785,91 @@ class _MapScreenState extends State<MapScreen> {
                 deleteRoadandMarker: _deleteRoadAndMarker,
                 startLocationTracking: startLocationTracking,
               ),
-            ] else ...[
-              TurnByTurnNavigationUI(
-                instruction: _instruction,
-                distance: "$_distance meters",
-                lane: _laneName,
-                instructionText: _instruction_text,
-              ),
-              Positioned(
-                bottom: 40,
-                left: 16,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                   //backgroundColor: Colors.transparent, // Transparent background
-                   backgroundColor: Colors.blueAccent, // Button color
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(16), // Rounded corners
+            ] else
+              ...[
+                TurnByTurnNavigationUI(
+                  instruction: _instruction,
+                  distance: "$_distance meters",
+                  lane: _laneName,
+                  instructionText: _instruction_text,
+                ),
+                Positioned(
+                  bottom: 40,
+                  left: 16,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      //backgroundColor: Colors.transparent, // Transparent background
+                      backgroundColor: Colors.blueAccent, // Button color
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                        BorderRadius.circular(16), // Rounded corners
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      //shadowColor: Colors.black.withOpacity(0.5),
+                      elevation: 8, // Add shadow effect
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
-                    //shadowColor: Colors.black.withOpacity(0.5),
-                    elevation: 8, // Add shadow effect
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => DrivingBehaviorPage()),
-                    );
-                  },
-                  child: const Text(
-                    "Check Driving  \nBehaviour Analysis",
-                    style: TextStyle(
-                      fontSize: 12, // Font size for the button
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white, // Text color
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => DrivingBehaviorPage()),
+                      );
+                    },
+                    child: const Text(
+                      "Check Driving  \nBehaviour Analysis",
+                      style: TextStyle(
+                        fontSize: 12, // Font size for the button
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white, // Text color
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              // Positioned(
-              //   bottom: 40,
-              //   left: 16,
-              //   // top: 50,
-              //   child: Container(
-              //     width: 50, // Adjust the size as needed
-              //     height: 50, // Make it a perfect circle
-              //     decoration: BoxDecoration(
-              //       color: Colors.white.withOpacity(0.7),
-              //       borderRadius: BorderRadius.circular(24),
-              //       boxShadow: [
-              //         BoxShadow(
-              //           color: Colors.black.withOpacity(0.5),
-              //           blurRadius: 20,
-              //           offset: const Offset(0, 10),
-              //         ),
-              //       ],
-              //     ),
-              //     child: Center(
-              //       child: Column(
-              //         mainAxisAlignment: MainAxisAlignment.center,
-              //         children: [
-              //           Text(
-              //             "${_speed.toStringAsFixed(1)}", // Show speed value
-              //             style: const TextStyle(
-              //               fontSize: 24, // Adjust font size
-              //               fontWeight: FontWeight.bold,
-              //               color: Colors.black, // Text color
-              //             ),
-              //           ),
-              //           const Text(
-              //             "km/h", // Speed unit
-              //             style: TextStyle(
-              //               fontSize: 10, // Smaller font size for unit
-              //               color: Colors.black,
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
-            ],
+                // Positioned(
+                //   bottom: 40,
+                //   left: 16,
+                //   // top: 50,
+                //   child: Container(
+                //     width: 50, // Adjust the size as needed
+                //     height: 50, // Make it a perfect circle
+                //     decoration: BoxDecoration(
+                //       color: Colors.white.withOpacity(0.7),
+                //       borderRadius: BorderRadius.circular(24),
+                //       boxShadow: [
+                //         BoxShadow(
+                //           color: Colors.black.withOpacity(0.5),
+                //           blurRadius: 20,
+                //           offset: const Offset(0, 10),
+                //         ),
+                //       ],
+                //     ),
+                //     child: Center(
+                //       child: Column(
+                //         mainAxisAlignment: MainAxisAlignment.center,
+                //         children: [
+                //           Text(
+                //             "${_speed.toStringAsFixed(1)}", // Show speed value
+                //             style: const TextStyle(
+                //               fontSize: 24, // Adjust font size
+                //               fontWeight: FontWeight.bold,
+                //               color: Colors.black, // Text color
+                //             ),
+                //           ),
+                //           const Text(
+                //             "km/h", // Speed unit
+                //             style: TextStyle(
+                //               fontSize: 10, // Smaller font size for unit
+                //               color: Colors.black,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ),
+                //   ),
+                // ),
+              ],
             // Location Button Widget
             Positioned(
               bottom: 30,

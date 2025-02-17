@@ -8,10 +8,11 @@ import 'map_screen.dart';
 import 'welcome_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  final String userId;
   final String userName;
   final String email;
 
-  const HomeScreen({super.key, required this.userName, required this.email});
+  const HomeScreen({super.key,required this.userId,required this.userName, required this.email});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -105,8 +106,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     return Scaffold(
       extendBodyBehindAppBar: true,
       drawer: CustomDrawer(
+        userId: widget.userId,
         userName: widget.userName,
         email: widget.email,
+
         onSignOut: _signOut,
       ),
       body: FadeTransition(

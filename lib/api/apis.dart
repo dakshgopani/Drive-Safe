@@ -5,8 +5,11 @@ import 'package:http/http.dart' as http;
 
 
 class ApiService {
-  static const String apiKey = '740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af';
+  static const String apiKey = '482e99f096mshef50116a37ccc61p12b962jsnc32558402289';
+  //740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af
   //5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121
+  //482e99f096mshef50116a37ccc61p12b962jsnc32558402289
+  //c36d30f815msh75780840b555c67p173308jsn8852466cbd42
   static const String apiHost = 'google-map-places.p.rapidapi.com';
   static Future<List<dynamic>> fetchSearchResults(String query) async {
     const String apiUrl =

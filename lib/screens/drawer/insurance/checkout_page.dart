@@ -48,7 +48,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         context: context,
         barrierDismissible: false,
         builder: (context) => AlertDialog(
-          title: Icon(
+          title: const Icon(
             Icons.check_circle, 
             color: Colors.green, 
             size: 80,
@@ -56,7 +56,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 'Payment Successful!',
                 style: TextStyle(
                   fontSize: 22,
@@ -65,7 +65,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'Policy document sent to ${widget.email}',
                 textAlign: TextAlign.center,
@@ -75,7 +75,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         ),
@@ -85,7 +85,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   void _handlePaymentError(PaymentFailureResponse response) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Payment Failed!'),
         backgroundColor: Colors.red,
       ),
@@ -109,7 +109,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Confirm Payment',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
@@ -135,23 +135,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     children: [
                       Text(
                         widget.policy['name'],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.blueAccent,
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Policy Price:',
                             style: TextStyle(fontSize: 16),
                           ),
                           Text(
                             '₹${widget.policy['price']}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.green,
@@ -159,34 +159,34 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Owner Name:',
                             style: TextStyle(fontSize: 16),
                           ),
                           Text(
                             widget.ownerName,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
+                          const Text(
                             'Vehicle Number:',
                             style: TextStyle(fontSize: 16),
                           ),
                           Text(
                             widget.vehicleNumber,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -197,14 +197,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ),
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               
               // Payment Button
               _isProcessing 
-                ? CircularProgressIndicator(color: Colors.blueAccent)
+                ? const CircularProgressIndicator(color: Colors.blueAccent)
                 : ElevatedButton.icon(
-                    icon: Icon(Icons.payment),
-                    label: Text(
+                    icon: const Icon(Icons.payment),
+                    label: const Text(
                       'Pay Now',
                       style: TextStyle(
                         fontSize: 18,
@@ -212,7 +212,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 60),
+                      minimumSize: const Size(double.infinity, 60),
                       backgroundColor: Colors.blueAccent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
