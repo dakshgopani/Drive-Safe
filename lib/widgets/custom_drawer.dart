@@ -1,3 +1,4 @@
+import 'package:algorithm_avengers_ves_final/screens/convoyMode/convoy_mode_main_page.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/store_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/driving_monitor_screen.dart';
 import 'package:flutter/material.dart';
@@ -68,8 +69,9 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
         category: "Services",
       ),
       DrawerItem(
-        title: "Performance",
+        title: "Convoy Mode",
         icon: Icons.speed_outlined,
+        route: ConvoyModeMainPage(),
         color: Colors.blueAccent,
         category: "Services",
       ),
@@ -271,7 +273,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
   Widget _buildMenuItems() {
     String? currentCategory;
     List<Widget> menuWidgets = [];
-    
+
     for (int i = 0; i < _menuItems.length; i++) {
       if (currentCategory != _menuItems[i].category) {
         currentCategory = _menuItems[i].category;
@@ -318,7 +320,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
 
   Widget _buildMenuItem(int index, DrawerItem item) {
     final isSelected = index == _selectedIndex;
-    
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Container(
@@ -434,4 +436,3 @@ class DrawerItem {
     required this.category,
   });
 }
-

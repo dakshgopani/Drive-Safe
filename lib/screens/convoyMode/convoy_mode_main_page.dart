@@ -1,13 +1,12 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'create_room_page.dart';
 import 'join_room_page.dart';
 
-class MainPage extends StatelessWidget {
-  const MainPage({super.key});
+class ConvoyModeMainPage extends StatelessWidget {
+  const ConvoyModeMainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +37,7 @@ class MainPage extends StatelessWidget {
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                   child: Container(
-                  width: screenWidth * 0.85,  // 75% of screen width
+                    width: screenWidth * 0.85, // 75% of screen width
                     height: screenHeight * 0.3,
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.6), // Light frosted glass effect
@@ -129,5 +128,4 @@ class MainPage extends StatelessWidget {
       ),
     );
   }
-
 }

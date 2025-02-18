@@ -8,6 +8,8 @@ class LocationButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 60,
+      height: 60,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(12),
@@ -29,6 +31,8 @@ class LocationButton extends StatelessWidget {
           size: 30,
         ),
       ),
+
     );
+
   }
 }

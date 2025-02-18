@@ -8,6 +8,8 @@ class TripService {
   final int speedCount;
   final Map<String, dynamic> startLocation;
   final Map<String, dynamic> destination;
+  final Duration tripDuration; // Add this parameter
+
 
   TripService({
     required this.tripStartTime,
@@ -16,9 +18,10 @@ class TripService {
     required this.speedCount,
     required this.startLocation,
     required this.destination,
+    required this.tripDuration,
   });
 
-  /// ✅ Save trip and return `tripId`
+  /// ✅ Save trip and return tripId
   Future<String> saveTripDataToFirestore() async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid; // Get current user ID
@@ -33,7 +36,7 @@ class TripService {
         "endTime": DateTime.now(),
         "totalDistance": totalDistanceTraveled.toStringAsFixed(2),
         "averageSpeed": speedCount > 0 ? (totalSpeed / speedCount).toStringAsFixed(2) : "0",
-        "tripDuration": DateTime.now().difference(tripStartTime).inMinutes,
+        "tripDuration": tripDuration.inMinutes, // Store the trip duration in minutes
         "startLocation": startLocation,
         "destination": destination,
         "timestamp": FieldValue.serverTimestamp(),

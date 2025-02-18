@@ -602,6 +602,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           //       "latitude": destination.latitude,
           //       "longitude": destination.longitude,
           //     },
+          //    tripDuration: tripDuration,
           //   ).saveTripDataToFirestore().then((tripId) {
           // _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
           // });
@@ -665,6 +666,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                 "latitude": staticDestination.latitude,
                 "longitude": staticDestination.longitude,
               },
+              tripDuration: staticTripDuration,
             ).saveTripDataToFirestore().then((tripId) {
               _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
             });
@@ -940,6 +942,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   Future<Offset?> calculateScreenCoordinates(GeoPoint targetPoint) async {
     // 1. Retrieve the current bounding box of the map
     BoundingBox? boundingBox = await _mapController.bounds;
+    if (boundingBox == null) return null;
 
     // 2. Get the size of the map widget
     RenderBox? mapRenderBox = _scaffoldKey.currentContext?.findRenderObject() as RenderBox?;
@@ -950,13 +953,28 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     double latRange = boundingBox.north - boundingBox.south;
     double lonRange = boundingBox.east - boundingBox.west;
 
+    // Ensure ranges are not zero to avoid division by zero
+    if (latRange <= 0 || lonRange <= 0) return null;
+
     // 4. Calculate the relative position of the target point within the bounding box
     double latRelative = (boundingBox.north - targetPoint.latitude) / latRange;
     double lonRelative = (targetPoint.longitude - boundingBox.west) / lonRange;
 
-    // 5. Translate the relative position to screen coordinates
-    double x = lonRelative * mapSize.width;
-    double y = latRelative * mapSize.height;
+    // 5. Fine-tune the x-coordinate to adjust for the right-side shift
+    double xAdjustmentFactor = 0.98; // Adjust this value (e.g., 0.98 shifts slightly left)
+    double rawX = lonRelative * mapSize.width * xAdjustmentFactor;
+    double rawY = latRelative * mapSize.height;
+
+    // 6. Clamp the coordinates to ensure they stay within the screen bounds
+    double x = rawX.clamp(0, mapSize.width); // Clamp x between 0 and map width
+    double y = rawY.clamp(0, mapSize.height); // Clamp y between 0 and map height
+
+    // 7. Check if the capsule goes out of the screen width and flip it if necessary
+    const capsuleWidth = 56.0; // Width of the capsule (adjust based on your design)
+    if (x + capsuleWidth > mapSize.width) {
+      // Flip the capsule to the opposite side
+      x = mapSize.width - capsuleWidth - (mapSize.width - x);
+    }
 
     return Offset(x, y);
   }
@@ -1132,8 +1150,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
               // Location and Compass Buttons
               Positioned(
-                bottom: 30,
-                right: 16,
+                top: 200,
+                left: 16,
                 child: LocationButton(onPressed: _centerOnCurrentLocation),
               ),
               Positioned(
@@ -1146,6 +1164,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                 right: 16,
                 child: ZoomButtons(mapController: _mapController),
               ),
+              _buildDrivingStats(),
 
               // Show Search Screen if searching
               if (isSearching) _buildSearchScreen(),
@@ -1389,15 +1408,15 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     return Material(
       color: Colors.transparent,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(4),  // Reduced padding
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16), // Smaller capsule
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              blurRadius: 6, // Reduced blur
+              offset: Offset(0, 2), // Adjusted shadow
             ),
           ],
         ),
@@ -1405,13 +1424,13 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildMarkerOption(Icons.home, Colors.red, tappedLocation),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),  // Reduced spacing
             _buildMarkerOption(Icons.work, Colors.green, tappedLocation),
-            const SizedBox(width: 8),
-            _buildMarkerOption(Icons.favorite, Colors.pink, tappedLocation),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
+            _buildMarkerOption(Icons.directions_car, Colors.blue, tappedLocation),
+            const SizedBox(width: 4),
             _buildMarkerOption(Icons.star, Colors.amber, tappedLocation),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             _buildMarkerOption(Icons.flag, Colors.orange, tappedLocation),
           ],
         ),
@@ -1419,24 +1438,165 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 
-
   Widget _buildMarkerOption(IconData icon, Color color, GeoPoint tappedLocation) {
     return GestureDetector(
       onTap: () {
-        // Handle marker icon selection
         _updateMarkerIcon(tappedLocation, icon, color);
-
-        // Remove the reaction capsule
         _removeReactionCapsule();
       },
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),  // Reduced padding inside the icon
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: color, size:40),
+        child: Icon(icon, color: color, size: 28), // Reduced icon size
       ),
+    );
+  }
+
+  Widget _buildDrivingStats() {
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      bottom: MediaQuery.of(context).padding.top,
+      left: 16,
+      right: 16,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text(
+                  isNavigating ? "Navigation Active" : "Today's Drive",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const Spacer(),
+                _buildStatusBadge(),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem(
+                  icon: Icons.speed,
+                  value: "0",
+                  unit: "km/h",
+                  label: "Current Speed",
+                  color: Colors.blue,
+                ),
+                _buildStatItem(
+                  icon: Icons.timer,
+                  value: "0",
+                  unit: "hrs",
+                  label: "Drive Time",
+                  color: Colors.orange,
+                ),
+                _buildStatItem(
+                  icon: Icons.route,
+                  value: "0",
+                  unit: "km",
+                  label: "Distance",
+                  color: Colors.purple,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildStatusBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isNavigating ? Colors.blue.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isNavigating ? Icons.navigation : Icons.circle,
+            color: isNavigating ? Colors.blue : Colors.green,
+            size: 8,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isNavigating ? "Navigating" : "Active",
+            style: TextStyle(
+              color: isNavigating ? Colors.blue[700] : Colors.green[700],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildStatItem({
+    required IconData icon,
+    required String value,
+    required String unit,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: value,
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              TextSpan(
+                text: " $unit",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 12,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -5,6 +5,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'profile_setup_page.dart';
 
+class UserData {
+  final Map<String, dynamic> data;
+
+  UserData(this.data);
+}
+
 class ProfileScreen extends StatefulWidget {
   final String userName;
   final String email;
@@ -23,16 +29,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final user = FirebaseAuth.instance.currentUser;
 
-  Stream<DocumentSnapshot> getUserStream() {
+  Stream<UserData> getUserStream() {
     return _firestore
         .collection('users')
         .doc(user?.uid)
-        .snapshots();
+        .snapshots()
+        .asyncMap((userSnapshot) async {
+      final userData = userSnapshot.data() as Map<String, dynamic>? ?? {};
+
+      // Fetch trips subcollection
+      final tripsSnapshot = await _firestore
+          .collection('users')
+          .doc(user?.uid)
+          .collection('trips')
+          .get();
+
+      // Calculate driving stats
+      double totalDistance = 0;
+      int totalTrips = tripsSnapshot.docs.length;
+      double totalHoursDriven = 0;
+      Set<String> uniqueRoutes = {};
+
+      for (var trip in tripsSnapshot.docs) {
+        final tripData = trip.data();
+        totalDistance += double.parse(tripData['totalDistance'] ?? '0')/1000;
+        totalHoursDriven += (tripData['tripDuration'] as num? ?? 0) / 60;
+        uniqueRoutes
+            .add('${tripData['startLocation']} - ${tripData['destination']}');
+      }
+
+      // Update userData with calculated stats
+      userData['drivingStats'] = {
+        'Total Distance': '${totalDistance.toStringAsFixed(2)} km',
+        'Hours Driven': '${totalHoursDriven.toStringAsFixed(2)} hrs',
+        // 'Favorite Routes': '${uniqueRoutes.length}',
+        'Favorite Routes': '${userData['favoriteRoutes']?.length ?? 0}',
+        'Total Trips': '$totalTrips',
+      };
+
+      return UserData(userData);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
+    return StreamBuilder<UserData>(
       stream: getUserStream(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -53,32 +94,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
 
-        final userData = snapshot.data?.data() as Map<String, dynamic>? ?? {};
-        
+        final userData = snapshot.data?.data ?? {};
+
         // Extract user data with fallbacks
         final name = userData['name'] ?? widget.userName;
         final email = userData['email'] ?? widget.email;
         final phone = userData['phone'] ?? 'Not set';
-        final carCompany = userData['carCompany'] ?? 'Not set';
+        final carCompany = userData['carMake'] ?? 'Not set';
         final carModel = userData['carModel'] ?? 'Not set';
         final carNumber = userData['carNumber'] ?? 'Not set';
-        
+
         // Extract driving statistics
-        final drivingStats = {
-          'Total Distance': '${userData['totalDistance'] ?? 0} km',
-          'Hours Driven': '${userData['hoursDriven'] ?? 0} hrs',
-          'Favorite Routes': '${userData['favoriteRoutes']?.length ?? 0}',
-          'Total Trips': '${userData['totalTrips'] ?? 0}',
-        };
+        final drivingStats = userData['drivingStats'] ??
+            {
+              'Total Distance': '0 km',
+              'Hours Driven': '0 hrs',
+              'Favorite Routes': '0',
+              'Total Trips': '0',
+            };
 
         // Extract achievements
         final achievements = (userData['achievements'] as List<dynamic>? ?? [])
             .map((achievement) => Achievement(
-                  title: achievement['title'] ?? '',
-                  description: achievement['description'] ?? '',
-                  icon: _getIconData(achievement['icon'] ?? 'stars'),
-                  color: _getColor(achievement['color'] ?? 'amber'),
-                ))
+          title: achievement['title'] ?? '',
+          description: achievement['description'] ?? '',
+          icon: _getIconData(achievement['icon'] ?? 'stars'),
+          color: _getColor(achievement['color'] ?? 'amber'),
+        ))
             .toList();
 
         if (achievements.isEmpty) {
@@ -234,11 +276,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildCarDetails(
-    BuildContext context,
-    String carCompany,
-    String carModel,
-    String carNumber,
-  ) {
+      BuildContext context,
+      String carCompany,
+      String carModel,
+      String carNumber,
+      ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Card(
@@ -309,7 +351,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildAchievements(List<Achievement> achievements) {
     if (achievements.isEmpty) return const SizedBox.shrink();
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -339,8 +381,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildRecentActivity(List<dynamic>? activities) {
-    final List<Map<String, dynamic>> recentActivities = 
-        (activities as List<dynamic>? ?? []).map((activity) {
+    final List<Map<String, dynamic>> recentActivities =
+    (activities as List<dynamic>? ?? []).map((activity) {
       return {
         'title': activity['title'] ?? 'Unknown Activity',
         'subtitle': activity['subtitle'] ?? '',
@@ -420,11 +462,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Existing widget building methods remain the same
   Widget _buildInfoItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
+      BuildContext context, {
+        required IconData icon,
+        required String title,
+        required String value,
+      }) {
     return Row(
       children: [
         Container(
@@ -613,13 +655,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               backgroundColor: Colors.blueAccent,
-              
             ),
-            child: const Text('Start Driving',style: const TextStyle(
+            child: const Text(
+              'Start Driving',
+              style: const TextStyle(
                 fontSize: 16,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-              ),),
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
@@ -632,11 +676,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('View History',style: const TextStyle(
+            child: const Text(
+              'View History',
+              style: const TextStyle(
                 fontSize: 16,
                 color: Colors.blueAccent,
                 fontWeight: FontWeight.bold,
-              ),),
+              ),
+            ),
           ),
         ],
       ),
