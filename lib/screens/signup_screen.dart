@@ -1,4 +1,5 @@
 import 'package:algorithm_avengers_ves_final/screens/home_screen.dart';
+import 'package:algorithm_avengers_ves_final/screens/map_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/profile_setup_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +72,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => HomeScreen(
+                builder: (context) => MapScreen(
+                  userId: user.uid ?? "No Id",
                   userName: user.displayName ?? "User",
                   // Pass the user name dynamically
                   email: user.email ?? "No email", // Pass the email dynamically
@@ -130,7 +132,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => HomeScreen(
+              builder: (context) => MapScreen(
+                userId: user.uid ?? "No Id",
                 userName: user.displayName ?? "User",
                 // Pass the user name dynamically
                 email: user.email ?? "No email", // Pass the email dynamically

@@ -2,14 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:algorithm_avengers_ves_final/screens/drawer/driving_behaviour_analysis.dart';
+import 'package:algorithm_avengers_ves_final/screens/drawer/rewards_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/profile_screen.dart';
-import 'package:algorithm_avengers_ves_final/screens/welcome_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart' ;
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/distance_bottom_sheet.dart';
+import '../services/trip_service.dart';
 import '../utils/constants.dart';
 import '../api/apis.dart';
 import '../services/location_services.dart';
@@ -20,23 +21,31 @@ import '../widgets/location_button.dart';
 import '../widgets/turn_by_turn.dart';
 import '../widgets/zoom_button.dart';
 import '../widgets/search_input.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'package:confetti/confetti.dart';
+
+import 'package:algorithm_avengers_ves_final/screens/welcome_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
+import 'package:firebase_auth/firebase_auth.dart';
+
+
+// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MapScreen extends StatefulWidget {
   final String userName;
   final String email;
+  final String userId;
   final double? latitude;
   final double? longitude;
 
-  const MapScreen({Key? key,  required this.userName,  required this.email,this.latitude,
+  const MapScreen({Key? key,  required this.userName,  required this.email,required this.userId,this.latitude,
     this.longitude,}) : super(key: key);
 
   @override
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin,WidgetsBindingObserver  {
+class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin,WidgetsBindingObserver{
   final MapController _mapController=MapController(
     initPosition: GeoPoint(latitude: 0, longitude: 0),
   );
@@ -61,6 +70,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   int currentStepIndex = 1;
   String _instruction_text = "";
   double _speed = 0.0;
+  bool _tripCompleted = false; // Flag to prevent repeated pop-ups
+  String? userId = FirebaseAuth.instance.currentUser?.uid;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -79,11 +90,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _fetchUniqueId();
     _initializeLocation();
     _setupAnimations();
     _loadSavedPlaces();
-
   }
 
   @override
@@ -94,9 +103,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     _mapController.dispose();
     _animationController.dispose();
     _stopLocationTracking();
+    _positionStream?.cancel();
     super.dispose();
   }
-
   void _setupAnimations() {
     _animationController = AnimationController(
       duration: const Duration(seconds: 2),
@@ -162,7 +171,6 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       );
     }
   }
-
   Future<void> _initializeLocation() async {
     // Fetch the current location using the updated LocationService
     GeoPoint? location = await LocationService.initializeLocation(context);
@@ -205,7 +213,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       }
     } catch (e) {
 
-        checkForIncident();
+      checkForIncident();
     }
   }
 
@@ -381,12 +389,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           print("_setPlaceDetails: Duplicate place details detected. Skipping save.");
         }
       }
-    return placeDetails[1];
+      return placeDetails[1];
     } else {
       print("_setplaceDetails: Error in fetching place details");
     }
   }
-
   Future<void> _loadSavedPlaces() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String>? savedPlaces = prefs.getStringList('cached_places');
@@ -435,7 +442,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             roadColor: Colors.blueAccent,
             roadBorderColor: Colors.black,
             roadBorderWidth: 2.5,
-            zoomInto: true,
+            zoomInto: false,
+            // earlier it was true
             isDotted: false,
           ),
         );
@@ -502,22 +510,308 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
   StreamSubscription<Position>? _positionStream;
 
+
   void startLocationTracking() {
+    const double thresholdDistance = 10.0; // Trip completes within 10 meters
+
+    double totalDistanceTraveled = 0.0;
+    double lastKnownSpeed = 0.0;
+    double totalSpeed = 0.0;
+    int speedCount = 0;
+    DateTime? tripStartTime;
+    Position? previousPosition;
+
+    tripStartTime = DateTime.now();
 
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position position) {
-          // Handle the updated position here
-          print(
-              'Current Position: ${position.latitude}, ${position.longitude}');
-          setState(() {
-            isNavigating = true;
-            // _speed = position.speed * 3.6;
-          });
-          checkForNextTurn(position);
+          // ---------- DYNAMIC TRIP TRACKING ----------
+          // GeoPoint userLocation = GeoPoint(
+          //   latitude: position.latitude,
+          //   longitude: position.longitude,
+          // );
+          //
+          // GeoPoint? _startLocation; // Store the first recorded position
+          //
+          // GeoPoint destination = _destinationLocation ?? GeoPoint(latitude: 19.1889541, longitude: 72.835543);
+          //
+          // double dynamicDistance = Geolocator.distanceBetween(
+          //   userLocation.latitude,
+          //   userLocation.longitude,
+          //   destination.latitude,
+          //   destination.longitude,
+          // );
+          //
+          // if (_startLocation == null) {
+          //   _startLocation = GeoPoint(
+          //     latitude: position.latitude,
+          //     longitude: position.longitude,
+          //   );
+          //   print("🚀 Start Location Captured: $_startLocation");
+          // }
+          //
+          //
+          // print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
+          //
+          // setState(() {
+          //   isNavigating = true;
+          // });
+          //
+          // // Speed tracking
+          // double speed = position.speed; // Speed in meters per second
+          // lastKnownSpeed = speed * 3.6; // Convert to km/h
+          // totalSpeed += lastKnownSpeed;
+          // speedCount++;
+          //
+          // if (previousPosition != null) {
+          //   double segmentDistance = Geolocator.distanceBetween(
+          //     previousPosition!.latitude,
+          //     previousPosition!.longitude,
+          //     position.latitude,
+          //     position.longitude,
+          //   );
+          //   totalDistanceTraveled += segmentDistance;
+          // }
+          // previousPosition = position;
+          //setState(() {
+          //             isNavigating = true;
+          //             // _speed = position.speed * 3.6;
+          // });
+          // checkForNextTurn(position);
+          //_startGyroscopeListener();
+          // if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
+          //   _tripCompleted = true;
+          //
+          //   Duration tripDuration = DateTime.now().difference(tripStartTime!);
+          //   double avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
+          //
+          //   print("🎉 Trip Completed - Dynamic Data");
+          //
+          //   // Save dynamic trip data to Firestore
+          //   TripService(
+          //     tripStartTime: tripStartTime!,
+          //     totalDistanceTraveled: totalDistanceTraveled,
+          //     totalSpeed: totalSpeed,
+          //     speedCount: speedCount,
+          //     startLocation: {
+          //       "latitude": _startLocation!.latitude,
+          //       "longitude": _startLocation!.longitude,
+          //     }, // ✅ Correct start location
+          //     destination: {
+          //       "latitude": destination.latitude,
+          //       "longitude": destination.longitude,
+          //     },
+          //   ).saveTripDataToFirestore().then((tripId) {
+          // _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
+          // });
+          //
+          //
+          // } else {
+          //   print("🚗 Trip NOT Completed Yet (Live)");
+          // }
+
+          // ---------- STATIC TESTING ----------
+          const double simulatedLat = 19.1889541;
+          const double simulatedLng = 72.835543;
+          GeoPoint? _startLocation; // Store the first recorded position
+
+          GeoPoint simulatedSource = GeoPoint(
+              latitude: simulatedLat, longitude: simulatedLng);
+          GeoPoint staticDestination = GeoPoint(
+              latitude: 19.1889541, longitude: 72.835543);
+
+          double staticDistance = Geolocator.distanceBetween(
+            simulatedSource.latitude,
+            simulatedSource.longitude,
+            staticDestination.latitude,
+            staticDestination.longitude,
+          );
+
+          if (_startLocation == null) {
+            _startLocation = GeoPoint(
+              latitude: position.latitude,
+              longitude: position.longitude,
+            );
+            print("🚀 Start Location Captured: $_startLocation");
+          }
+
+          print('📏 Distance to Destination (Static Test): ${staticDistance
+              .toStringAsFixed(2)} meters');
+
+          if (staticDistance <= thresholdDistance && !_tripCompleted) {
+            print("🎉 Trip Completed - Static Test");
+            // _showTripCompletedPopup();
+            _tripCompleted = true; // ✅ Prevent multiple pop-ups
+
+            Duration staticTripDuration = Duration(minutes: 15, seconds: 20);
+            double staticAvgSpeed = 45.0;
+            double staticTotalDistance = 5000.0; // Dummy total distance (5 km)
+
+            // Save static trip data to Firestore
+            TripService(
+              tripStartTime: tripStartTime!,
+              totalDistanceTraveled: staticTotalDistance,
+              totalSpeed: staticAvgSpeed * 15,
+              // Dummy speed calculations
+              speedCount: 15,
+              // Dummy speed count
+              startLocation: {
+                "latitude": _startLocation!.latitude,
+                "longitude": _startLocation!.longitude,
+              },
+              // ✅ Correct start location
+              destination: {
+                "latitude": staticDestination.latitude,
+                "longitude": staticDestination.longitude,
+              },
+            ).saveTripDataToFirestore().then((tripId) {
+              _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
+            });
+          } else {
+            print("🚗 Trip NOT Completed Yet (Static Test)");
+          }
+
         });
-    _startGyroscopeListener();
+
   }
+
+  void _navigateToRewardsScreen(String userId, String tripId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RewardsSystem(userId: userId, requestId: tripId),
+      ),
+    );
+  }
+
+
+  // **Function to show the trip completed pop-up**
+
+  void _showTripCompletedPopup(String userId, String tripId) {
+    ConfettiController confettiController = ConfettiController(
+        duration: const Duration(seconds: 3));
+
+    confettiController.play(); // Start confetti animation
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.transparent,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // 🎉 Confetti Animation
+              Positioned(
+                top: 0,
+                child: ConfettiWidget(
+                  confettiController: confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  // Burst effect
+                  emissionFrequency: 0.03,
+                  // More frequent confetti bursts
+                  numberOfParticles: 50,
+                  // Increase for more confetti
+                  gravity: 0.3,
+                  // Slower fall effect
+                  shouldLoop: false,
+                  colors: [
+                    Colors.redAccent,
+                    Colors.greenAccent,
+                    Colors.blueAccent,
+                    Colors.orangeAccent,
+                    Colors.purpleAccent,
+                  ],
+                ),
+              ),
+
+              // 🎊 Pop-Up UI
+              Container(
+                padding: const EdgeInsets.all(25),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blueAccent.shade200, Colors.blueAccent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.celebration, // 🎉 Celebration icon
+                      color: Colors.white,
+                      size: 80,
+                    ),
+
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Trip Completed!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Text(
+                      "You have successfully reached your destination.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // View Rewards Button
+                    ElevatedButton(
+                      onPressed: () {
+                        confettiController.stop(); // Stop confetti animation
+                        Navigator.pop(context); // Close pop-up
+                        _navigateToRewardsScreen(
+                            userId, tripId); // ✅ Go to Rewards Screen
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blueAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 30),
+                        elevation: 5,
+                      ),
+                      child: const Text(
+                        "View Rewards 🎁",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 
   void stopLocationTracking() {
     setState(() {
@@ -580,8 +874,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     }
   }
 
-  void _checkAndShowBottomSheet(
-      BuildContext context, void Function() startLocationTracking) {
+  void _checkAndShowBottomSheet(BuildContext context,
+      void Function() startLocationTracking) {
     // Show the bottom sheet
     showBottomSheet(
       context: context,
@@ -595,7 +889,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               // Pass null to show loading state
-              return DistanceBottomSheet(placeDetails: null);
+              return const DistanceBottomSheet(placeDetails: null);
             } else {
               final fetchedPlaceDetails = snapshot.data;
               print("$fetchedPlaceDetails");
@@ -639,8 +933,10 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         );
       },
     );
+    setState(() {
+      isSearching=false;
+    });
   }
-
   Future<Offset?> calculateScreenCoordinates(GeoPoint targetPoint) async {
     // 1. Retrieve the current bounding box of the map
     BoundingBox? boundingBox = await _mapController.bounds;
@@ -750,8 +1046,6 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       _mapController.rotateMapCamera(currentRotation);
     });
   }
-
-
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -783,6 +1077,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             userName: widget.userName,
             email: widget.email,
             onSignOut: _signOut,
+            userId: '',
           ),
           resizeToAvoidBottomInset: false,
           key: _scaffoldKey,
@@ -790,7 +1085,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             children: [
               // Map View Widget
               MapView(mapController: _mapController,
-              showReactionCapsule: _showReactionCapsule,),
+                showReactionCapsule: _showReactionCapsule,),
 
               // Toggle between top bar and search UI
               if (!isSearching) _buildTopBar(),
@@ -860,7 +1155,6 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       ),
     );
   }
-
   /// **Builds the Top Bar**
   Widget _buildTopBar() {
     return Positioned(
@@ -1147,5 +1441,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   }
 }
 // Widget for "No Recent Search"
+
+
 
 

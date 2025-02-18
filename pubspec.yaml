@@ -63,7 +63,14 @@ dependencies:
   google_fonts: ^6.1.0
   image_picker: ^1.0.4
   file_picker: ^8.3.1
+  workmanager: ^0.5.1
+  http: ^1.2.2
+  confetti: ^0.7.0
+  logger: ^1.3.0
+  scratcher: ^2.5.0
   app_links: ^6.3.3
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -92,6 +99,17 @@ flutter:
   #   - images/a_dot_ham.jpeg
 
   assets:
+    - assets/images/store/car_wash_coupon_img.png
+    - assets/images/store/emergency_kit_img.png
+    - assets/images/store/amazon_gift_card_img.png
+    - assets/images/store/toll_free_pass_img.png
+    - assets/images/store/custom_licence_plate.png
+    - assets/images/store/mystery_box_img.png
+    - assets/images/store/car_skins_img.png
+    - assets/images/store/car_parking_spot_img.png
+    - assets/images/store/car_air_freshener.png
+    - assets/images/store/car_sun_shade_img.png
+    - assets/images/store/ev_charging_spot_img.png
     - assets/images/Ellipse_1.png
     - assets/images/Ellipse_2.png
     - assets/images/google_new.png

@@ -7,6 +7,8 @@ import 'create_room_page.dart';
 import 'join_room_page.dart';
 
 class MainPage extends StatelessWidget {
+  const MainPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -18,7 +20,7 @@ class MainPage extends StatelessWidget {
             // Animated Background with a dynamic multi-color gradient
             Positioned.fill(
               child: AnimatedContainer(
-                duration: Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [Colors.blue.shade200, Colors.white],
@@ -65,18 +67,18 @@ class MainPage extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue.shade600, // Frosted blue color
-                            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 50),
+                            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
                             elevation: 10,
                           ),
-                          icon: Icon(
+                          icon: const Icon(
                             FontAwesomeIcons.plus,
                             color: Colors.white,
                             size: 28,
                           ),
-                          label: Text(
+                          label: const Text(
                             'Create Room',
                             style: TextStyle(
                               fontSize: 20,
@@ -85,7 +87,7 @@ class MainPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         // Join Room Button with gradient and subtle shadow
                         ElevatedButton.icon(
                           onPressed: () {
@@ -96,18 +98,18 @@ class MainPage extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green.shade600, // Frosted green color
-                            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 50),
+                            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),
                             ),
                             elevation: 10,
                           ),
-                          icon: Icon(
+                          icon: const Icon(
                             FontAwesomeIcons.users,
                             color: Colors.white,
                             size: 28,
                           ),
-                          label: Text(
+                          label: const Text(
                             '  Join Room',
                             style: TextStyle(
                               fontSize: 20,

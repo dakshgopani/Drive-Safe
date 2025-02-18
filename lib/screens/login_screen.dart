@@ -1,9 +1,9 @@
 import 'package:algorithm_avengers_ves_final/screens/home_screen.dart';
+import 'package:algorithm_avengers_ves_final/screens/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 // import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
-import 'map_screen.dart';
 import "signup_screen.dart";
 import 'package:firebase_auth/firebase_auth.dart';
 // import "home_page.dart";
@@ -108,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => MapScreen(
+                  userId: user.uid ?? "No Id",
                   userName: user.displayName ?? "User",
                   // Pass the user name dynamically
                   email: user.email ?? "No email", // Pass the email dynamically
@@ -161,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => MapScreen(
+              userId: user.uid ?? "No Id",
               userName: user.displayName ?? "User",
               // Pass the user name dynamically
               email: user.email ?? "No email", // Pass the email dynamically

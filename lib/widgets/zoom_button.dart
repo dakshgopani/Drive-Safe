@@ -31,26 +31,22 @@ class ZoomButtons extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+
           child: IconButton(
             onPressed: onPressed,
-            icon: Icon(icon, color: Colors.blue),
-          ),
-        ),
-      ),
+            icon: Icon(icon, color: Colors.blueAccent),
+          )
     );
+
   }
 }

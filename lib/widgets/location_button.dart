@@ -9,12 +9,13 @@ class LocationButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -22,7 +23,11 @@ class LocationButton extends StatelessWidget {
         onPressed: onPressed,
         tooltip: 'Center on current location',
         backgroundColor: Colors.white.withOpacity(0.8),
-        child: Icon(Icons.my_location, color: Colors.blue,size: 30,),
+        child: Icon(
+          Icons.my_location,
+          color: Colors.blueAccent,
+          size: 30,
+        ),
       ),
     );
   }

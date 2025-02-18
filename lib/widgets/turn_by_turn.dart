@@ -9,7 +9,7 @@ class TurnByTurnNavigationUI extends StatelessWidget {
   final String instructionText;
   final FlutterTts flutterTts = FlutterTts();
 
-  TurnByTurnNavigationUI({
+   TurnByTurnNavigationUI({
     Key? key,
     required this.instruction,
     required this.distance,

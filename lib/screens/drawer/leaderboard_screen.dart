@@ -1,8 +1,7 @@
-import 'package:algorithm_avengers_ves_final/widgets/leaderboard_filter.dart';
-import 'package:algorithm_avengers_ves_final/widgets/leaderboard_item.dart';
 import 'package:flutter/material.dart';
 import '../../models/user_profile.dart';
 import '../../services/firebase_service.dart';
+import '../../widgets/leaderboard_item.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -15,39 +14,86 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String selectedMetric = 'safetyScore';
   final FirebaseService _firebaseService = FirebaseService();
 
+  final List<Map<String, dynamic>> _metrics = [
+  {'value': 'safetyScore', 'label': 'Safety Score', 'icon': Icons.security},
+  {'value': 'ecoScore', 'label': 'Eco Score', 'icon': Icons.eco},
+  {'value': 'totalDistance', 'label': 'Total Distance', 'icon': Icons.speed},
+];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Leaderboard',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.1,
+          ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.blueAccent,
-        //const Color.fromARGB(255, 126, 191, 209)
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () => _showFilterDialog(context),
+            onPressed: () => _showFilterBottomSheet(context),
           ),
         ],
       ),
       body: Column(
         children: [
-          LeaderboardFilter(
-            selectedMetric: selectedMetric,
-            onMetricChanged: (value) {
-              setState(() => selectedMetric = value);
-            },
+          // Metrics Selector
+          Container(
+            height: 60,
+            color: Colors.blueAccent,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _metrics.length,
+              itemBuilder: (context, index) {
+                final metric = _metrics[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: ChoiceChip(
+                    label: Row(
+                      children: [
+                        Icon(
+                          metric['icon'] as IconData, 
+                          size: 20,
+                          color: selectedMetric == metric['value'] 
+                            ? Colors.blueAccent 
+                            : Colors.white,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          metric['label']!, 
+                          style: TextStyle(
+                            color: selectedMetric == metric['value'] 
+                              ? Colors.blueAccent 
+                              : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    selected: selectedMetric == metric['value'],
+                    onSelected: (bool selected) {
+                      if (selected) {
+                        setState(() => selectedMetric = metric['value']!);
+                      }
+                    },
+                    selectedColor: Colors.white,
+                    backgroundColor: Colors.blueAccent.shade200,
+                  ),
+                );
+              },
+            ),
           ),
+
+          // Leaderboard List
           Expanded(
             child: StreamBuilder<List<UserProfile>>(
-              stream: _firebaseService.getLeaderboard(
-                metric: selectedMetric,
-              ),
+              stream: _firebaseService.getLeaderboard(metric: selectedMetric),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return Center(
@@ -60,7 +106,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
                 if (!snapshot.hasData) {
                   return const Center(
-                    child: CircularProgressIndicator(),
+                    child: CircularProgressIndicator(color: Colors.blueAccent),
                   );
                 }
 
@@ -85,56 +131,42 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    showDialog(
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text(
-          'Filter Leaderboard',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: Column(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            DropdownButton<String>(
-              value: selectedMetric,
-              isExpanded: true,
-              items: const [
-                DropdownMenuItem(
-                  value: 'safetyScore',
-                  child: Text('Safety Score'),
-                ),
-                DropdownMenuItem(
-                  value: 'ecoScore',
-                  child: Text('Eco Score'),
-                ),
-                DropdownMenuItem(
-                  value: 'totalDistance',
-                  child: Text('Total Distance'),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => selectedMetric = value);
-                }
-              },
+            Text(
+              'Select Leaderboard Metric',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.blueAccent,
+              ),
             ),
+            SizedBox(height: 16),
+            ..._metrics.map((metric) => ListTile(
+              leading: Icon(
+                metric['icon'] as IconData, 
+                color: Colors.blueAccent,
+              ),
+              title: Text(metric['label']!),
+              onTap: () {
+                setState(() => selectedMetric = metric['value']!);
+                Navigator.pop(context);
+              },
+              trailing: selectedMetric == metric['value'] 
+                ? Icon(Icons.check, color: Colors.green) 
+                : null,
+            )),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-              Navigator.pop(context);
-            },
-            child: const Text('Apply'),
-          ),
-        ],
       ),
     );
   }

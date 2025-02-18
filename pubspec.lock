@@ -153,6 +153,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.0"
+  confetti:
+    dependency: "direct main"
+    description:
+      name: confetti
+      sha256: "979aafde2428c53947892c95eb244466c109c129b7eee9011f0a66caaca52267"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   cross_file:
     dependency: transitive
     description:
@@ -601,7 +609,7 @@ packages:
     source: hosted
     version: "2.1.0"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: b9c29a161230ee03d3ccf545097fccd9b87a5264228c5d348202e0f0c28f9010
@@ -728,6 +736,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
+  logger:
+    dependency: "direct main"
+    description:
+      name: logger
+      sha256: "7ad7215c15420a102ec687bb320a7312afd449bac63bfb1c60d9787c27b9767f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.0"
   logging:
     dependency: transitive
     description:
@@ -976,6 +992,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.28.0"
+  scratcher:
+    dependency: "direct main"
+    description:
+      name: scratcher
+      sha256: "540be49eb4773e7e300d4a85a9f93c600f7386cd2a82abb5b40a7f8f245e9785"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.5.0"
   sensors_plus:
     dependency: "direct main"
     description:
@@ -1309,6 +1333,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.10.1"
+  workmanager:
+    dependency: "direct main"
+    description:
+      name: workmanager
+      sha256: ed13530cccd28c5c9959ad42d657cd0666274ca74c56dea0ca183ddd527d3a00
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.2"
   xdg_directories:
     dependency: transitive
     description:

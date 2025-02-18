@@ -5,8 +5,11 @@ import 'package:http/http.dart' as http;
 
 
 class ApiService {
-  static const String apiKey = '5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121';
-  // 740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af
+  static const String apiKey = '482e99f096mshef50116a37ccc61p12b962jsnc32558402289';
+  //740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af
+  //5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121
+  //482e99f096mshef50116a37ccc61p12b962jsnc32558402289
+  //c36d30f815msh75780840b555c67p173308jsn8852466cbd42
   static const String apiHost = 'google-map-places.p.rapidapi.com';
   static Future<List<dynamic>> fetchSearchResults(String query) async {
     const String apiUrl =
@@ -46,6 +49,7 @@ class ApiService {
           'x-rapidapi-host': apiHost,
         },
       );
+
       if (response.statusCode == 200) {
         final placedetails = jsonDecode(response.body)['result'];
         final selectedLocation = GeoPoint(
@@ -68,6 +72,7 @@ class ApiService {
     // Construct the URI with the start and destination coordinates
     final Uri uri = Uri.parse(
         '$directionsUrl/${startLocation.longitude},${startLocation.latitude};${destinationLocation.longitude},${destinationLocation.latitude}?overview=full&geometries=geojson&steps=true');
+    print("uri:$uri");
     try {
       final response = await http.get(uri);
 
@@ -86,7 +91,6 @@ class ApiService {
       throw Exception('Error fetching directions: $e');
     }
   }
-
   static Future<List<String>> fetchCarMakes() async {
     final url = Uri.parse('https://car-data.p.rapidapi.com/cars/makes');
     final response = await http.get(
@@ -98,7 +102,7 @@ class ApiService {
     );
 
 
-      // Parse the JSON response into a List
+    // Parse the JSON response into a List
     if (response.statusCode == 200) {
       // Parse the JSON response into a List
       List<dynamic> jsonResponse = json.decode(response.body);

@@ -71,6 +71,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         context,
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) => MapScreen(
+            userId: user.uid ?? "No Id",
             userName: user.displayName ?? 'User',
             email: user.email ?? 'No Email',
           ),

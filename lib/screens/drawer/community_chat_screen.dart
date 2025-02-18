@@ -83,7 +83,7 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
       await _firestore.collection('driver_chat').add({
         'text': message,
         'sender':
-            _currentUser?.displayName ?? _currentUser?.email ?? 'Anonymous',
+        _currentUser?.displayName ?? _currentUser?.email ?? 'Anonymous',
         'timestamp': FieldValue.serverTimestamp(),
         'base64Image': base64Image,
         'fileName': fileName,
@@ -141,6 +141,7 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
                 userName: _currentUser?.displayName ?? "User",
                 // Pass the user name dynamically
                 email: _currentUser?.email ?? "No email",
+                userId: _currentUser!.uid,
                 latitude: lat,
                 longitude: long,// Pass the email dynamically
               ),
@@ -167,7 +168,7 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
   Future<void> _pickImage() async {
     try {
       final XFile? image =
-          await _imagePicker.pickImage(source: ImageSource.gallery);
+      await _imagePicker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         File file = File(image.path);
         await _sendMessage('', file: file);
@@ -315,10 +316,10 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
                           Text(
                             timestamp != null
                                 ? DateFormat('MMM d, h:mm a')
-                                    .format(timestamp.toDate())
+                                .format(timestamp.toDate())
                                 : '',
                             style:
-                                TextStyle(fontSize: 12.0, color: Colors.grey),
+                            TextStyle(fontSize: 12.0, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -365,7 +366,7 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide(
                               color:
-                                  _isEmergency ? Colors.red : Colors.blueAccent,
+                              _isEmergency ? Colors.red : Colors.blueAccent,
                             ),
                           ),
                           filled: true,

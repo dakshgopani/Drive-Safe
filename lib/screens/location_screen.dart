@@ -99,23 +99,23 @@
 //   }
 //
 //   StreamSubscription<Position>? _positionStream;
-//   //
-//   // @override
-//   // Widget build(BuildContext context) {
-//   //   return GestureDetector(
-//   //     onTap: () {
-//   //       FocusManager.instance.primaryFocus?.unfocus();
-//   //     },
-//   //     behavior: HitTestBehavior.opaque,
-//   //     child: Scaffold(
-//   //       key: _scaffoldKey,
-//   //       body: Stack(
-//   //         children: [
-//   //           // Map View Widget
-//   //           MapView(mapController: _mapController),
-//   //         ]
-//   //       ),
-//   //     ),
-//   //   );
-//   // }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return GestureDetector(
+//       onTap: () {
+//         FocusManager.instance.primaryFocus?.unfocus();
+//       },
+//       behavior: HitTestBehavior.opaque,
+//       child: Scaffold(
+//         key: _scaffoldKey,
+//         body: Stack(
+//           children: [
+//             // Map View Widget
+//             MapView(mapController: _mapController),
+//           ]
+//         ),
+//       ),
+//     );
+//   }
 // }

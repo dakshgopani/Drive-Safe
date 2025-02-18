@@ -1,3 +1,5 @@
+import 'package:algorithm_avengers_ves_final/screens/drawer/store_screen.dart';
+import 'package:algorithm_avengers_ves_final/screens/driving_monitor_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/car_game_page.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/community_chat_screen.dart';
@@ -7,12 +9,14 @@ import 'package:algorithm_avengers_ves_final/screens/drawer/leaderboard_screen.d
 import 'package:algorithm_avengers_ves_final/screens/drawer/settings_screen.dart';
 
 class CustomDrawer extends StatefulWidget {
+  final String userId;
   final String userName;
   final String email;
   final VoidCallback onSignOut;
 
   const CustomDrawer({
     Key? key,
+    required this.userId,
     required this.userName,
     required this.email,
     required this.onSignOut,
@@ -26,67 +30,79 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   int _selectedIndex = -1;
+  late List<DrawerItem> _menuItems; // Declare the list without initializing it
 
-  final List<DrawerItem> _menuItems = [
-    DrawerItem(
-      title: "Drive Analysis",
-      icon: Icons.analytics_outlined,
-      route: DrivingBehaviorPage(),
-      color: Colors.blueAccent,
-      category: "Drive & Analysis",
-    ),
-    DrawerItem(
-      title: "Leaderboard",
-      icon: Icons.leaderboard_outlined,
-      route: LeaderboardScreen(),
-      color: Colors.blueAccent,
-      category: "Drive & Analysis",
-    ),
-    DrawerItem(
-      title: "Record Drive",
-      icon: Icons.fiber_manual_record_outlined,
-      color: Colors.blueAccent,
-      category: "Drive & Analysis",
-    ),
-    DrawerItem(
-      title: "Insurance",
-      icon: Icons.security_outlined,
-      route: PolicyListPage(),
-      color: Colors.blueAccent,
-      category: "Services",
-    ),
-    DrawerItem(
-      title: "Performance",
-      icon: Icons.speed_outlined,
-      color: Colors.blueAccent,
-      category: "Services",
-    ),
-    DrawerItem(
-      title: "Simulation",
-      icon: Icons.sports_esports_outlined,
-      route: CarGamePage(),
-      color: Colors.blueAccent,
-      category: "Entertainment",
-    ),
-    DrawerItem(
-      title: "Community",
-      icon: Icons.forum_outlined,
-      route: DriverSafetyChatScreen(),
-      color: Colors.blueAccent,
-      category: "Entertainment",
-    ),
-    DrawerItem(
-      title: "Settings",
-      icon: Icons.settings_outlined,
-      route: SettingsScreen(),
-      color: Colors.blueAccent,
-      category: "System",
-    ),
-  ];
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize the menu items here, where widget is accessible
+    _menuItems = [
+      DrawerItem(
+        title: "Drive Analysis",
+        icon: Icons.analytics_outlined,
+        route: DrivingBehaviorPage(),
+        color: Colors.blueAccent,
+        category: "Drive & Analysis",
+      ),
+      DrawerItem(
+        title: "Leaderboard",
+        icon: Icons.leaderboard_outlined,
+        route: LeaderboardScreen(),
+        color: Colors.blueAccent,
+        category: "Drive & Analysis",
+      ),
+      DrawerItem(
+        title: "Record Drive",
+        icon: Icons.fiber_manual_record_outlined,
+        route: DrivingMonitorScreen(),
+        color: Colors.blueAccent,
+        category: "Drive & Analysis",
+      ),
+      DrawerItem(
+        title: "Insurance",
+        icon: Icons.security_outlined,
+        route: PolicyListPage(),
+        color: Colors.blueAccent,
+        category: "Services",
+      ),
+      DrawerItem(
+        title: "Performance",
+        icon: Icons.speed_outlined,
+        color: Colors.blueAccent,
+        category: "Services",
+      ),
+      DrawerItem(
+        title: "Simulation",
+        icon: Icons.sports_esports_outlined,
+        route: CarGamePage(),
+        color: Colors.blueAccent,
+        category: "Entertainment",
+      ),
+      DrawerItem(
+        title: "Community",
+        icon: Icons.forum_outlined,
+        route: DriverSafetyChatScreen(),
+        color: Colors.blueAccent,
+        category: "Entertainment",
+      ),
+      DrawerItem(
+        title: "Store",
+        icon: Icons.local_grocery_store_sharp,
+        route: StoreScreen(userId: widget.userId), // ✅ No error now
+        color: Colors.blueAccent,
+        category: "Entertainment",
+      ),
+      DrawerItem(
+        title: "Settings",
+        icon: Icons.settings_outlined,
+        route: SettingsScreen(),
+        color: Colors.blueAccent,
+        category: "System",
+      ),
+    ];
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -94,6 +110,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
     _fadeAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(_controller);
     _controller.forward();
   }
+
 
   @override
   void dispose() {

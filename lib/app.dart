@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:algorithm_avengers_ves_final/screens/home_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/initial/splash_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/map_screen.dart';
@@ -9,7 +7,7 @@ import 'screens/welcome_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'firebase_options.dart'; // Import the generated file
-import 'package:app_links/app_links.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _initializeFirebase(); // Use your custom Firebase initialization
@@ -41,7 +39,8 @@ class MyApp extends StatelessWidget {
           final userName = args['userName'] as String? ?? 'User'; // Fallback to 'User' if no name provided
 
           return MaterialPageRoute(
-            builder: (context) => HomeScreen(
+            builder: (context) => MapScreen(
+              userId: userId,
               userName: userName, // Pass the user name dynamically
               email: args['email'] ?? "No email", // Pass the email dynamically
             ),

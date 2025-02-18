@@ -64,42 +64,42 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Future<void> _uploadImage(File imageFile) async {
-    setState(() => _isUploading = true);
+  setState(() => _isUploading = true);
 
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('No user logged in');
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('No user logged in');
 
-      // Convert image to Base64
-      List<int> imageBytes = await imageFile.readAsBytes();
-      String base64Image = base64Encode(imageBytes);
+    // Convert image to Base64
+    List<int> imageBytes = await imageFile.readAsBytes();
+    String base64Image = base64Encode(imageBytes);
 
-      // Store Base64 image in Firestore
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'profilePhotoBase64': base64Image,
-      });
+    // Store Base64 image in Firestore
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      'profilePhotoBase64': base64Image,
+    });
 
-      setState(() {
-        _imageUrl = base64Image; // Store it for display
-        _isUploading = false;
-      });
+    setState(() {
+      _imageUrl = base64Image; // Store it for display
+      _isUploading = false;
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile photo updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      setState(() => _isUploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error uploading image: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile photo updated successfully!'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  } catch (e) {
+    setState(() => _isUploading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error uploading image: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   Future<void> _pickAndUploadImage() async {
     try {
@@ -133,7 +133,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             .collection('users')
             .doc(widget.userId)
             .get();
-
+            
         if (userDoc.exists) {
           final data = userDoc.data();
           if (data != null) {
@@ -280,67 +280,67 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Widget _buildProfileAvatar() {
     return Stack(
-      children: [
-        CircleAvatar(
-          radius: 50,
-          backgroundColor: Colors.blueAccent.withOpacity(0.1),
-          child: _isUploading
-              ? const CircularProgressIndicator()
-              : _imageUrl != null
-              ? ClipOval(
-            child: Image.network(
-              _imageUrl!,
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.person_outline, size: 50, color: Colors.blueAccent),
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Center(
-                  child: CircularProgressIndicator(
-                    value: loadingProgress.expectedTotalBytes != null
-                        ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                        : null,
-                  ),
-                );
-              },
-            ),
-          )
-              : const Icon(Icons.person_outline, size: 50, color: Colors.blueAccent),
-        ),
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: GestureDetector(
-            onTap: _isUploading ? null : _pickAndUploadImage,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: _isUploading
-                  ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                  child: _isUploading
+                      ? const CircularProgressIndicator()
+                      : _imageUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                _imageUrl!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.person_outline, size: 50, color: Colors.blueAccent),
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                          : null,
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : const Icon(Icons.person_outline, size: 50, color: Colors.blueAccent),
                 ),
-              )
-                  : const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-            ),
-          ),
-        ),
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: _isUploading ? null : _pickAndUploadImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: _isUploading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                    ),
+                  ),
+                ),
       ],
     );
   }
@@ -487,9 +487,9 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
       items: _carModels
           .map((model) => DropdownMenuItem(
-        value: model,
-        child: Text(model),
-      ))
+                value: model,
+                child: Text(model),
+              ))
           .toList(),
       onChanged: (value) {
         setState(() => _selectedCarModel = value);
@@ -513,21 +513,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       ),
       child: _isSaving
           ? const SizedBox(
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-        ),
-      )
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
           : const Text(
-        'Save Profile',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+              'Save Profile',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
     );
   }
 }
