@@ -1,0 +1,62 @@
+{
+  "project_info": {
+    "project_number": "837850795211",
+    "project_id": "algo-avengers-ves-final",
+    "storage_bucket": "algo-avengers-ves-final.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837850795211:android:b20c3c8a6da5cc2e829f4e",
+        "android_client_info": {
+          "package_name": "com.example.algorithm_avengers_ves_final"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "837850795211-jbbjpq0ubv8q5bnt3mb773mpaiujldna.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.algorithm_avengers_ves_final",
+            "certificate_hash": "a890e5250300e24837bb294b469ec65dd2dc8f37"
+          }
+        },
+        {
+          "client_id": "837850795211-njp3v3bkd673u2eo6hj538qs869egj4b.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.algorithm_avengers_ves_final",
+            "certificate_hash": "c6f10fddba156f8fb5f29507ceef08d1dfea4d81"
+          }
+        },
+        {
+          "client_id": "837850795211-3447huovoj4p6g3sluske24fgkbl6mgi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmv-BktS1xeyd07TH6EAGxogO6dx0iC1c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "837850795211-3447huovoj4p6g3sluske24fgkbl6mgi.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "837850795211-13e32iddmc7acil8h56bd9qgc7nrfesi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.algorithmAvengersVesFinal"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
