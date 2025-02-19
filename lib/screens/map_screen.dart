@@ -7,6 +7,7 @@ import 'package:algorithm_avengers_ves_final/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/distance_bottom_sheet.dart';
@@ -522,7 +523,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     Position? previousPosition;
 
     tripStartTime = DateTime.now();
-
+    
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position position) {
@@ -551,13 +552,14 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           //   print("🚀 Start Location Captured: $_startLocation");
           // }
           //
-          //
-          // print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
-          //
           // setState(() {
           //   isNavigating = true;
+          //   // _speed = position.speed * 3.6;
           // });
+          // checkForNextTurn(position);
+          // _startGyroscopeListener();
           //
+          // print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
           // // Speed tracking
           // double speed = position.speed; // Speed in meters per second
           // lastKnownSpeed = speed * 3.6; // Convert to km/h
@@ -574,12 +576,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           //   totalDistanceTraveled += segmentDistance;
           // }
           // previousPosition = position;
-          //setState(() {
-          //             isNavigating = true;
-          //             // _speed = position.speed * 3.6;
-          // });
-          // checkForNextTurn(position);
-          //_startGyroscopeListener();
+          //
           // if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
           //   _tripCompleted = true;
           //
@@ -673,7 +670,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           } else {
             print("🚗 Trip NOT Completed Yet (Static Test)");
           }
-
+  //
         });
 
   }
@@ -688,7 +685,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   }
 
 
-  // **Function to show the trip completed pop-up**
+  // *Function to show the trip completed pop-up*
 
   void _showTripCompletedPopup(String userId, String tripId) {
     ConfettiController confettiController = ConfettiController(
@@ -1076,6 +1073,17 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           }
           return false; // Prevent navigating back
         }
+        else if(isNavigating)
+          {
+            if(mounted)
+              {
+                setState(() {
+                  isNavigating=false;
+                  _deleteRoadAndMarker();
+                  routes=[];
+                });
+              }
+          }
         else{
           Navigator.pop(context);
           _deleteRoadAndMarker();
@@ -1106,7 +1114,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                 showReactionCapsule: _showReactionCapsule,),
 
               // Toggle between top bar and search UI
-              if (!isSearching) _buildTopBar(),
+              if (!isSearching && !isNavigating) _buildTopBar(),
 
               // Navigation UI
               if (isNavigating) ...[
@@ -1150,17 +1158,17 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
               // Location and Compass Buttons
               Positioned(
-                top: 200,
+                top: isNavigating ? 280 : 200,
                 left: 16,
                 child: LocationButton(onPressed: _centerOnCurrentLocation),
               ),
               Positioned(
-                top: 130,
+                top: isNavigating ? 210 : 130,
                 left: 16,
                 child: buildCompass(60, Colors.white, Colors.red),
               ),
               Positioned(
-                top: 130,
+                top: isNavigating ? 210 :130,
                 right: 16,
                 child: ZoomButtons(mapController: _mapController),
               ),
@@ -1174,7 +1182,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       ),
     );
   }
-  /// **Builds the Top Bar**
+  /// *Builds the Top Bar*
   Widget _buildTopBar() {
     return Positioned(
       top: MediaQuery.of(context).padding.top,
@@ -1271,7 +1279,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   }
 
 
-  /// **Builds the Search UI**
+  /// *Builds the Search UI*
   Widget _buildSearchScreen() {
     return Positioned.fill(
 
@@ -1326,7 +1334,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
 
 
-  /// **Reusable Quick Action Button**
+  /// *Reusable Quick Action Button*
   Widget _buildQuickActionButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -1600,8 +1608,3 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 }
-// Widget for "No Recent Search"
-
-
-
-

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:algorithm_avengers_ves_final/screens/map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -275,9 +276,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ProfileScreen(
+          builder: (context) => MapScreen(
             userName: _nameController.text.trim(),
-            email: _emailController.text.trim(),
+            email: _emailController.text.trim(), 
+            userId: widget.userId,
           ),
         ),
       );
