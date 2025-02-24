@@ -1,7 +1,10 @@
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+
+import 'qr_code_screen.dart';
 
 class CreateRoomPage extends StatefulWidget {
   @override
@@ -15,24 +18,51 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
   final TextEditingController numberOfCarsController = TextEditingController();
   String? generatedRoomCode;
 
-  void createRoom() {
-    final uuid = Uuid();
-    setState(() {
-      generatedRoomCode = uuid.v4();
-    });
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Room Created"),
-        content: Text("Room Code: $generatedRoomCode"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK"),
-          ),
-        ],
-      ),
-    );
+  void createRoom() async {
+    final uuid = const Uuid();
+    final String roomCode = uuid.v4();
+
+    // Create a map to store the room details
+    final Map<String, dynamic> roomData = {
+      "roomCode": roomCode,
+      "roomName": roomNameController.text,
+      "startLocation": startLocationController.text,
+      "destination": destinationController.text,
+      "numberOfCars": numberOfCarsController.text,
+      "createdAt": FieldValue.serverTimestamp(), // Store the creation time
+    };
+
+    try {
+      // Save the room details in Firebase Firestore
+      await FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(roomCode)
+          .set(roomData);
+
+      // Convert roomData to a JSON-like string for QR code
+      final String roomDetails = '''
+    {
+      "roomCode": "$roomCode",
+      "roomName": "${roomNameController.text}",
+      "startLocation": "${startLocationController.text}",
+      "destination": "${destinationController.text}",
+      "numberOfCars": "${numberOfCarsController.text}"
+    }
+    ''';
+
+      // Navigate to the QR Code Page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => QRCodeScreen(roomDetails: roomDetails),
+        ),
+      );
+    } catch (e) {
+      // Show error if Firestore operation fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to create room: $e")),
+      );
+    }
   }
 
   @override
@@ -42,7 +72,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Create Room")),
+      appBar: AppBar(title: const Text("Create Room")),
       body: Stack(
         children: [
           // Background gradient
@@ -67,10 +97,11 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                 child: Container(
-                  width: screenWidth * 0.75,  // 75% of screen width
+                  width: screenWidth * 0.75, // 75% of screen width
                   height: screenHeight * 0.6, // 60% of screen height
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2), // Light frosted glass effect
+                    color: Colors.white.withOpacity(0.2),
+                    // Light frosted glass effect
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: Colors.white.withOpacity(0.3),
@@ -99,10 +130,11 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         // Start Location TextField
                         TextField(
                           controller: startLocationController,
@@ -114,10 +146,11 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         // Destination Location TextField
                         TextField(
                           controller: destinationController,
@@ -129,10 +162,11 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         // Number of Cars TextField
                         TextField(
                           controller: numberOfCarsController,
@@ -144,22 +178,25 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
                               borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 15),
                           ),
                           keyboardType: TextInputType.number,
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         // Create Room Button
                         ElevatedButton(
                           onPressed: createRoom,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600, // Button color
-                            padding: EdgeInsets.symmetric(vertical: 20, horizontal: 50),
+                            backgroundColor: Colors.blue.shade600,
+                            // Button color
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 20, horizontal: 50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             "Create Room",
                             style: TextStyle(
                               fontSize: 18,
