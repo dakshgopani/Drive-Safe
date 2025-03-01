@@ -5,28 +5,25 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() {
-  runApp(MyApp());
-}
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Driving Behavior Analysis',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.grey[100],
-        cardTheme: CardTheme(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-      home: DrivingBehaviorPage(),
-    );
-  }
+class DrivingTrip {
+  final DateTime startTime;
+  final DateTime endTime;
+  final double score;
+  final int harshBrakingCount;
+  final int harshCorneringCount;
+  final double distance;
+  final double durationHours;
+
+  DrivingTrip({
+    required this.startTime,
+    required this.endTime,
+    required this.score,
+    required this.harshBrakingCount,
+    required this.harshCorneringCount,
+    required this.distance,
+    required this.durationHours,
+  });
 }
 
 class DrivingBehaviorPage extends StatefulWidget {
@@ -36,50 +33,54 @@ class DrivingBehaviorPage extends StatefulWidget {
 
 class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
     with SingleTickerProviderStateMixin {
+  // Sensor data storage
   List<Map<String, dynamic>> sensorData = [];
-  late StreamSubscription<UserAccelerometerEvent>
-      _userAccelerometerSubscription;
+  late StreamSubscription<UserAccelerometerEvent> _userAccelerometerSubscription;
   late StreamSubscription<GyroscopeEvent> _gyroscopeSubscription;
+
+  // State variables
   bool isCollecting = false;
   String predictionResult = 'No data';
-  int _overallHarshBrakingCount = 0;
-  int _overallHarshCorneringCount = 0;
-  List<String> predictedClasses = [];
-  Map<String, int> classCounts = {};
+  int _currentHarshBrakingCount = 0;
+  int _currentHarshCorneringCount = 0;
+  double _currentSpeedingScore = 0.0;
+  double _currentPhoneUsageScore = 0.0;
 
+  // Trip storage
+  List<DrivingTrip> tripHistory = [];
+  DateTime? currentTripStartTime;
+
+  // Sensor readings
   double accX = 0, accY = 0, accZ = 0;
   double gyroX = 0, gyroY = 0, gyroZ = 0;
 
-  // New UI-related variables
+  // Chart data
+  List<FlSpot> dailyScores = [];
+  List<FlSpot> weeklyScores = [];
+  List<FlSpot> monthlyScores = [];
+
+  // UI controllers
   late TabController _tabController;
   final List<String> _periods = ['Day', 'Week', 'Month'];
-
-  // Sample data for demonstration
-  final List<FlSpot> weeklyScores = [
-    FlSpot(0, 72),
-    FlSpot(1, 75),
-    FlSpot(2, 78),
-    FlSpot(3, 74),
-    FlSpot(4, 76),
-    FlSpot(5, 80),
-    FlSpot(6, 78),
-  ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+
+    // Initialize sensor subscriptions
     _userAccelerometerSubscription =
         userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-      setState(() {
-        accX = event.x;
-        accY = event.y;
-        accZ = event.z;
-      });
-      if (isCollecting) {
-        addSensorData(event.x, event.y, event.z, 'acc');
-      }
-    });
+          setState(() {
+            accX = event.x;
+            accY = event.y;
+            accZ = event.z;
+          });
+          if (isCollecting) {
+            addSensorData(event.x, event.y, event.z, 'acc');
+          }
+        });
+
     _gyroscopeSubscription = gyroscopeEvents.listen((GyroscopeEvent event) {
       setState(() {
         gyroX = event.x;
@@ -90,6 +91,15 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
         addSensorData(event.x, event.y, event.z, 'gyro');
       }
     });
+
+    _initializeChartData();
+  }
+
+  void _initializeChartData() {
+    dailyScores = List.generate(24, (index) => FlSpot(index.toDouble(), 0));
+    weeklyScores = List.generate(7, (index) => FlSpot(index.toDouble(), 0));
+    monthlyScores = List.generate(30, (index) => FlSpot(index.toDouble(), 0));
+    _updateChartData();
   }
 
   void addSensorData(double x, double y, double z, String type) {
@@ -102,9 +112,10 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
       "GyroX": type == 'gyro' ? x : 0.0,
       "GyroY": type == 'gyro' ? y : 0.0,
       "GyroZ": type == 'gyro' ? z : 0.0,
+      "timestamp": DateTime.now().toIso8601String(),
     });
 
-    if (sensorData.length == 50) {
+    if (sensorData.length >= 50) {
       sendToAPI(List.from(sensorData));
       sensorData.clear();
     }
@@ -112,8 +123,7 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
 
   Future<void> sendToAPI(List<Map<String, dynamic>> data) async {
     try {
-      var url =
-          Uri.parse('https://rudraaaa76-driving-behavior.hf.space/predict');
+      var url = Uri.parse('https://rudraaaa76-driving-behavior.hf.space/predict');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -123,68 +133,163 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
       if (response.statusCode == 200) {
         var result = jsonDecode(response.body);
         setState(() {
-          List<String> newPredictedClasses =
-              List<String>.from(result['predicted_classes']);
-          predictedClasses.addAll(newPredictedClasses);
-
-          for (var className in newPredictedClasses) {
-            classCounts[className] = (classCounts[className] ?? 0) + 1;
-          }
-
-          String mostFrequentClass = classCounts.entries
-              .reduce((a, b) => a.value > b.value ? a : b)
-              .key;
-
-          predictionResult = mostFrequentClass;
-          _overallHarshBrakingCount += (result['harsh_braking_count'] as int);
-          _overallHarshCorneringCount +=
-              (result['harsh_cornering_count'] as int);
+          _updateFromApiResponse(result, data);
         });
-      } else {
-        print("Error response: ${response.body}");
       }
     } catch (e) {
       print("Exception: $e");
     }
   }
 
+  void _updateFromApiResponse(Map<String, dynamic> result, List<Map<String, dynamic>> data) {
+    _currentHarshBrakingCount += (result['harsh_braking_count'] as int);
+    _currentHarshCorneringCount += (result['harsh_cornering_count'] as int);
+    _currentSpeedingScore = _calculateSpeedingScore(data);
+    _currentPhoneUsageScore = _calculatePhoneUsageScore(data);
+    predictionResult = result['predicted_classes'].isNotEmpty
+        ? result['predicted_classes'].last
+        : 'Normal Driving';
+  }
+
+  DrivingStats _calculatePeriodStats(String period) {
+    DateTime now = DateTime.now();
+    DateTime periodStart;
+
+    if (period == 'Day') {
+      periodStart = DateTime(now.year, now.month, now.day);
+    } else if (period == 'Week') {
+      periodStart = now.subtract(Duration(days: now.weekday - 1));
+      periodStart = DateTime(periodStart.year, periodStart.month, periodStart.day);
+    } else {
+      periodStart = DateTime(now.year, now.month, 1);
+    }
+
+    List<DrivingTrip> periodTrips = tripHistory
+        .where((trip) => trip.startTime.isAfter(periodStart))
+        .toList();
+
+    if (periodTrips.isEmpty) {
+      return DrivingStats(score: 0, trips: 0, hours: 0, distance: 0);
+    }
+
+    double totalScore = periodTrips.fold(0, (sum, trip) => sum + trip.score);
+    double totalHours = periodTrips.fold(0, (sum, trip) => sum + trip.durationHours);
+    double totalDistance = periodTrips.fold(0, (sum, trip) => sum + trip.distance);
+
+    return DrivingStats(
+      score: totalScore / periodTrips.length,
+      trips: periodTrips.length,
+      hours: totalHours,
+      distance: totalDistance,
+    );
+  }
+
+  void _updateChartData() {
+    DateTime now = DateTime.now();
+
+    // Daily chart
+    var todayTrips = tripHistory.where((trip) =>
+    trip.startTime.day == now.day &&
+        trip.startTime.month == now.month &&
+        trip.startTime.year == now.year);
+    dailyScores = List.generate(24, (index) {
+      var hourTrips = todayTrips.where((trip) => trip.startTime.hour == index);
+      return FlSpot(
+        index.toDouble(),
+        hourTrips.isNotEmpty
+            ? hourTrips.fold(0.0, (sum, trip) => sum + trip.score) / hourTrips.length
+            : 0.0,
+      );
+    });
+
+    // Weekly chart
+    var weekStart = now.subtract(Duration(days: now.weekday - 1));
+    var weekTrips = tripHistory.where((trip) => trip.startTime.isAfter(weekStart));
+    weeklyScores = List.generate(7, (index) {
+      var dayTrips = weekTrips.where((trip) =>
+      trip.startTime.weekday == (index + 1));
+      return FlSpot(
+        index.toDouble(),
+        dayTrips.isNotEmpty
+            ? dayTrips.fold(0.0, (sum, trip) => sum + trip.score) / dayTrips.length
+            : 0.0,
+      );
+    });
+
+    // Monthly chart
+    var monthStart = DateTime(now.year, now.month, 1);
+    var monthTrips = tripHistory.where((trip) => trip.startTime.isAfter(monthStart));
+    monthlyScores = List.generate(30, (index) {
+      var dayTrips = monthTrips.where((trip) =>
+      trip.startTime.day == (index + 1));
+      return FlSpot(
+        index.toDouble(),
+        dayTrips.isNotEmpty
+            ? dayTrips.fold(0.0, (sum, trip) => sum + trip.score) / dayTrips.length
+            : 0.0,
+      );
+    });
+  }
+
+  double _calculateDrivingScore() {
+    double baseScore = 80;
+    double harshBrakingPenalty = _currentHarshBrakingCount * 2;
+    double harshCorneringPenalty = _currentHarshCorneringCount * 2;
+    double speedingPenalty = _currentSpeedingScore * 10;
+    double phonePenalty = _currentPhoneUsageScore * 10;
+    return (baseScore - harshBrakingPenalty - harshCorneringPenalty -
+        speedingPenalty - phonePenalty).clamp(0, 100);
+  }
+
+  double _calculateSpeedingScore(List<Map<String, dynamic>> data) {
+    double maxAcc = data.map((e) => (e['AccX'] as double).abs()).reduce((a, b) => a > b ? a : b);
+    return (maxAcc > 5 ? 0.3 : 0.1);
+  }
+
+  double _calculatePhoneUsageScore(List<Map<String, dynamic>> data) {
+    double maxGyro = data.map((e) => (e['GyroX'] as double).abs()).reduce((a, b) => a > b ? a : b);
+    return (maxGyro > 3 ? 0.2 : 0.05);
+  }
+
   void startCollection() {
     setState(() {
       isCollecting = true;
       sensorData.clear();
-      predictedClasses.clear();
-      classCounts.clear();
-      _overallHarshBrakingCount = 0;
-      _overallHarshCorneringCount = 0;
+      _currentHarshBrakingCount = 0;
+      _currentHarshCorneringCount = 0;
+      _currentSpeedingScore = 0.0;
+      _currentPhoneUsageScore = 0.0;
       predictionResult = 'Collecting data...';
+      currentTripStartTime = DateTime.now();
     });
   }
 
   void stopCollection() {
+    if (currentTripStartTime == null) return;
+
+    double durationHours = DateTime.now().difference(currentTripStartTime!).inMinutes / 60.0;
+    double estimatedDistance = durationHours * 40; // Assume 40 km/h average
+
     setState(() {
       isCollecting = false;
-    });
-    if (sensorData.isNotEmpty) {
-      sendToAPI(sensorData);
-    }
-  }
+      if (sensorData.isNotEmpty) {
+        sendToAPI(sensorData);
+      }
 
-  List<String> generateRecommendations(String prediction) {
-    switch (prediction) {
-      case 'Aggressive Driving':
-        return [
-          'Avoid rapid acceleration.',
-          'Reduce hard braking.',
-          'Drive at a consistent speed.',
-        ];
-      case 'Distracted Driving':
-        return [
-          'Focus on the road.',
-          'Avoid using your phone while driving.',
-        ];
-      default:
-        return ['Maintain your current driving habits.'];
-    }
+      // Save trip
+      DrivingTrip trip = DrivingTrip(
+        startTime: currentTripStartTime!,
+        endTime: DateTime.now(),
+        score: _calculateDrivingScore(),
+        harshBrakingCount: _currentHarshBrakingCount,
+        harshCorneringCount: _currentHarshCorneringCount,
+        distance: estimatedDistance,
+        durationHours: durationHours,
+      );
+
+      tripHistory.add(trip);
+      _updateChartData();
+    });
   }
 
   @override
@@ -213,18 +318,12 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
           indicatorColor: Colors.blue,
         ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildDayView(),
-                _buildWeekView(),
-                _buildMonthView(),
-              ],
-            ),
-          ),
+          _buildPeriodView('Day', dailyScores),
+          _buildPeriodView('Week', weeklyScores),
+          _buildPeriodView('Month', monthlyScores),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -235,88 +334,52 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
     );
   }
 
-  Widget _buildDayView() {
+  Widget _buildPeriodView(String period, List<FlSpot> chartData) {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildScoreCard(),
+          _buildScoreCard(period),
           SizedBox(height: 16),
-          _buildSensorReadingsCard(),
+          if (period == 'Day') _buildSensorReadingsCard(),
           SizedBox(height: 16),
-          _buildPredictionsCard(),
+          _buildPerformanceChart(period, chartData),
           SizedBox(height: 16),
-          _buildBehaviorMetricsCard(),
-          if (predictionResult != 'No data') _buildRecommendationsCard(),
+          _buildBehaviorMetricsCard(period),
+          SizedBox(height: 16),
+          if (predictionResult != 'No data' && period == 'Day')
+            _buildPredictionsCard(),
+          if (predictionResult != 'No data' && period == 'Day')
+            _buildRecommendationsCard(),
         ],
       ),
     );
   }
 
-  Widget _buildPredictionsCard() {
+  Widget _buildScoreCard(String period) {
+    DrivingStats stats = _calculatePeriodStats(period);
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Predictions',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Overall Prediction: $predictionResult',
-              style: TextStyle(fontSize: 16),
+              '$period Score',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             SizedBox(height: 8),
             Text(
-              'Predicted Classes:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: classCounts.entries
-                  .map((entry) => Text(
-                        '${entry.key}: ${entry.value}',
-                        style: TextStyle(fontSize: 14),
-                      ))
-                  .toList(),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Overall Harsh Braking: $_overallHarshBrakingCount',
-              style: TextStyle(fontSize: 16),
-            ),
-            Text(
-              'Overall Harsh Cornering: $_overallHarshCorneringCount',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWeeklyStatsCard() {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Weekly Statistics',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              stats.score.isNaN ? '0' : stats.score.toInt().toString(),
+              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('Avg. Score', '75'),
-                _buildStatItem('Total Trips', '35'),
-                _buildStatItem('Total Distance', '315 km'),
+                _buildStatItem('Trips', stats.trips.toString()),
+                _buildStatItem('Hours', stats.hours.toStringAsFixed(1)),
+                _buildStatItem('Distance', '${stats.distance.toInt()} km'),
               ],
             ),
           ],
@@ -325,52 +388,29 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
     );
   }
 
-  Widget _buildMonthlyStatsCard() {
+  Widget _buildSensorReadingsCard() {
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Monthly Statistics',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
+            Text('Current Readings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('Avg. Score', '77'),
-                _buildStatItem('Total Trips', '142'),
-                _buildStatItem('Total Distance', '1,280 km'),
-              ],
-            ),
+            _buildSensorRow('Accelerometer X', accX),
+            _buildSensorRow('Accelerometer Y', accY),
+            _buildSensorRow('Accelerometer Z', accZ),
+            Divider(),
+            _buildSensorRow('Gyroscope X', gyroX),
+            _buildSensorRow('Gyroscope Y', gyroY),
+            _buildSensorRow('Gyroscope Z', gyroZ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildWeekView() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _buildWeeklyStatsCard(),
-          SizedBox(height: 16),
-          _buildWeeklyChart(),
-          SizedBox(height: 16),
-          _buildBehaviorMetricsCard(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthlyChart() {
-    final List<FlSpot> monthlyScores = List.generate(30, (index) {
-      return FlSpot(index.toDouble(), 70 + (index % 10));
-    });
-
+  Widget _buildPerformanceChart(String period, List<FlSpot> scores) {
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16),
@@ -378,7 +418,7 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Monthly Performance',
+              '$period Performance',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
@@ -392,34 +432,28 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          if (value % 5 == 0) {
-                            return Text(
-                              value.toInt().toString(),
-                              style: TextStyle(
-                                  color: Colors.grey[600], fontSize: 12),
-                            );
+                          if (period == 'Day') {
+                            return Text('${value.toInt()}h');
+                          } else if (period == 'Week') {
+                            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                            return Text(days[value.toInt()]);
+                          } else {
+                            return Text((value.toInt() + 1).toString());
                           }
-                          return Text('');
                         },
                       ),
                     ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
+                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
-                      spots: monthlyScores,
+                      spots: scores,
                       isCurved: true,
                       color: Colors.blue,
-                      dotData: FlDotData(show: false),
+                      dotData: FlDotData(show: true),
                       belowBarData: BarAreaData(
                         show: true,
                         color: Colors.blue.withOpacity(0.1),
@@ -435,45 +469,85 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
     );
   }
 
-  Widget _buildMonthView() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _buildMonthlyStatsCard(),
-          SizedBox(height: 16),
-          _buildMonthlyChart(),
-          SizedBox(height: 16),
-          _buildBehaviorMetricsCard(),
-        ],
-      ),
-    );
-  }
+  Widget _buildBehaviorMetricsCard(String period) {
+    DrivingStats stats = _calculatePeriodStats(period);
 
-  Widget _buildScoreCard() {
+    // Calculate period-specific metrics
+    List<DrivingTrip> periodTrips = tripHistory.where((trip) {
+      DateTime now = DateTime.now();
+      if (period == 'Day') {
+        return trip.startTime.day == now.day &&
+            trip.startTime.month == now.month &&
+            trip.startTime.year == now.year;
+      } else if (period == 'Week') {
+        return trip.startTime.isAfter(now.subtract(Duration(days: now.weekday - 1)));
+      } else {
+        return trip.startTime.month == now.month && trip.startTime.year == now.year;
+      }
+    }).toList();
+
+    int periodHarshBraking = periodTrips.fold(0, (sum, trip) => sum + trip.harshBrakingCount);
+    int periodHarshCornering = periodTrips.fold(0, (sum, trip) => sum + trip.harshCorneringCount);
+    double periodSpeeding = isCollecting ? _currentSpeedingScore : 0.0;
+    double periodPhoneUsage = isCollecting ? _currentPhoneUsageScore : 0.0;
+
     return Card(
       child: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Today\'s Score',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '78',
-              style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-            ),
+            Text('Behavior Metrics', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('Trips', '5'),
-                _buildStatItem('Hours', '2.5'),
-                _buildStatItem('Distance', '45 km'),
-              ],
-            ),
+            _buildMetricRow('Harsh Braking', periodHarshBraking, Colors.orange),
+            _buildMetricRow('Harsh Cornering', periodHarshCornering, Colors.blue),
+            _buildMetricRow('Speeding', periodSpeeding, Colors.green),
+            _buildMetricRow('Phone Usage', periodPhoneUsage, Colors.red),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPredictionsCard() {
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Predictions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            Text('Current Trip Prediction: $predictionResult'),
+            SizedBox(height: 8),
+            Text('Harsh Braking: $_currentHarshBrakingCount'),
+            Text('Harsh Cornering: $_currentHarshCorneringCount'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsCard() {
+    final recommendations = generateRecommendations(predictionResult);
+    return Card(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Recommendations', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            SizedBox(height: 16),
+            ...recommendations.map((rec) => Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(child: Text(rec)),
+                ],
+              ),
+            )),
           ],
         ),
       ),
@@ -483,54 +557,20 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
   Widget _buildStatItem(String label, String value) {
     return Column(
       children: [
-        Text(
-          value,
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        Text(
-          label,
-          style: TextStyle(color: Colors.grey[600]),
-        ),
+        Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(label, style: TextStyle(color: Colors.grey[600])),
       ],
     );
   }
 
-  Widget _buildSensorReadingsCard() {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Current Readings',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            _buildSensorRow('Accelerometer X', accX),
-            _buildSensorRow('Accelerometer Y', accY),
-            _buildSensorRow('Accelerometer Z', accZ),
-            Divider(),
-            _buildSensorRow('Gyroscope X', gyroX),
-            _buildSensorRow('Gyroscope Y', gyroY),
-            _buildSensorRow('Gyroscope Z', gyroZ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSensorRow(String label, dynamic value) {
+  Widget _buildSensorRow(String label, double value) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label),
-          Text(
-            value.toStringAsFixed(2),
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text(value.toStringAsFixed(2), style: TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -561,127 +601,35 @@ class _DrivingBehaviorPageState extends State<DrivingBehaviorPage>
     );
   }
 
-  Widget _buildBehaviorMetricsCard() {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Behavior Metrics',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            _buildMetricRow(
-                'Harsh Braking', _overallHarshBrakingCount, Colors.orange),
-            _buildMetricRow(
-                'Harsh Cornering', _overallHarshCorneringCount, Colors.blue),
-            _buildMetricRow('Speeding', 0.2, Colors.green),
-            _buildMetricRow('Phone Usage', 0.1, Colors.red),
-          ],
-        ),
-      ),
-    );
+  List<String> generateRecommendations(String prediction) {
+    switch (prediction) {
+      case 'Aggressive Driving':
+        return [
+          'Avoid rapid acceleration.',
+          'Reduce hard braking.',
+          'Drive at a consistent speed.',
+        ];
+      case 'Distracted Driving':
+        return [
+          'Focus on the road.',
+          'Avoid using your phone while driving.',
+        ];
+      default:
+        return ['Maintain your current driving habits.'];
+    }
   }
+}
 
-  Widget _buildWeeklyChart() {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Weekly Performance',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Container(
-              height: 200,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: false),
-                  titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          const days = [
-                            'Mon',
-                            'Tue',
-                            'Wed',
-                            'Thu',
-                            'Fri',
-                            'Sat',
-                            'Sun'
-                          ];
-                          return Text(
-                            days[value.toInt() % days.length],
-                            style: TextStyle(
-                                color: Colors.grey[600], fontSize: 12),
-                          );
-                        },
-                      ),
-                    ),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: weeklyScores,
-                      isCurved: true,
-                      color: Colors.blue,
-                      dotData: FlDotData(show: true),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: Colors.blue.withOpacity(0.1),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class DrivingStats {
+  final double score;
+  final int trips;
+  final double hours;
+  final double distance;
 
-  Widget _buildRecommendationsCard() {
-    final recommendations = generateRecommendations(predictionResult);
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Recommendations',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            ...recommendations.map((rec) => Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                      SizedBox(width: 8),
-                      Expanded(child: Text(rec)),
-                    ],
-                  ),
-                )),
-          ],
-        ),
-      ),
-    );
-  }
+  DrivingStats({
+    required this.score,
+    required this.trips,
+    required this.hours,
+    required this.distance,
+  });
 }
