@@ -523,107 +523,25 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     Position? previousPosition;
 
     tripStartTime = DateTime.now();
-    
+
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position position) {
           // ---------- DYNAMIC TRIP TRACKING ----------
-          // GeoPoint userLocation = GeoPoint(
-          //   latitude: position.latitude,
-          //   longitude: position.longitude,
-          // );
-          //
-          // GeoPoint? _startLocation; // Store the first recorded position
-          //
-          // GeoPoint destination = _destinationLocation ?? GeoPoint(latitude: 19.1889541, longitude: 72.835543);
-          //
-          // double dynamicDistance = Geolocator.distanceBetween(
-          //   userLocation.latitude,
-          //   userLocation.longitude,
-          //   destination.latitude,
-          //   destination.longitude,
-          // );
-          //
-          // if (_startLocation == null) {
-          //   _startLocation = GeoPoint(
-          //     latitude: position.latitude,
-          //     longitude: position.longitude,
-          //   );
-          //   print("🚀 Start Location Captured: $_startLocation");
-          // }
-          //
-          // setState(() {
-          //   isNavigating = true;
-          //   // _speed = position.speed * 3.6;
-          // });
-          // checkForNextTurn(position);
-          // _startGyroscopeListener();
-          //
-          // print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
-          // // Speed tracking
-          // double speed = position.speed; // Speed in meters per second
-          // lastKnownSpeed = speed * 3.6; // Convert to km/h
-          // totalSpeed += lastKnownSpeed;
-          // speedCount++;
-          //
-          // if (previousPosition != null) {
-          //   double segmentDistance = Geolocator.distanceBetween(
-          //     previousPosition!.latitude,
-          //     previousPosition!.longitude,
-          //     position.latitude,
-          //     position.longitude,
-          //   );
-          //   totalDistanceTraveled += segmentDistance;
-          // }
-          // previousPosition = position;
-          //
-          // if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
-          //   _tripCompleted = true;
-          //
-          //   Duration tripDuration = DateTime.now().difference(tripStartTime!);
-          //   double avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
-          //
-          //   print("🎉 Trip Completed - Dynamic Data");
-          //
-          //   // Save dynamic trip data to Firestore
-          //   TripService(
-          //     tripStartTime: tripStartTime!,
-          //     totalDistanceTraveled: totalDistanceTraveled,
-          //     totalSpeed: totalSpeed,
-          //     speedCount: speedCount,
-          //     startLocation: {
-          //       "latitude": _startLocation!.latitude,
-          //       "longitude": _startLocation!.longitude,
-          //     }, // ✅ Correct start location
-          //     destination: {
-          //       "latitude": destination.latitude,
-          //       "longitude": destination.longitude,
-          //     },
-          //    tripDuration: tripDuration,
-          //   ).saveTripDataToFirestore().then((tripId) {
-          // _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
-          // });
-          //
-          //
-          // } else {
-          //   print("🚗 Trip NOT Completed Yet (Live)");
-          // }
+          GeoPoint userLocation = GeoPoint(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
 
-          // ---------- STATIC TESTING ----------
-          const double simulatedLat = 19.1889541;
-          const double simulatedLng = 72.835543;
           GeoPoint? _startLocation; // Store the first recorded position
 
-          GeoPoint simulatedSource = GeoPoint(
-              latitude: simulatedLat, longitude: simulatedLng);
-          GeoPoint staticDestination = GeoPoint(
-              latitude: 19.1889541, longitude: 72.835543);
+          GeoPoint destination = _destinationLocation ?? GeoPoint(latitude: 19.1889541, longitude: 72.835543);
 
-          double staticDistance = Geolocator.distanceBetween(
-            simulatedSource.latitude,
-            simulatedSource.longitude,
-            staticDestination.latitude,
-            staticDestination.longitude,
+          double dynamicDistance = Geolocator.distanceBetween(
+            userLocation.latitude,
+            userLocation.longitude,
+            destination.latitude,
+            destination.longitude,
           );
 
           if (_startLocation == null) {
@@ -634,43 +552,125 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             print("🚀 Start Location Captured: $_startLocation");
           }
 
-          print('📏 Distance to Destination (Static Test): ${staticDistance
-              .toStringAsFixed(2)} meters');
+          setState(() {
+            isNavigating = true;
+            // _speed = position.speed * 3.6;
+          });
+          checkForNextTurn(position);
+          _startGyroscopeListener();
 
-          if (staticDistance <= thresholdDistance && !_tripCompleted) {
-            print("🎉 Trip Completed - Static Test");
-            // _showTripCompletedPopup();
-            _tripCompleted = true; // ✅ Prevent multiple pop-ups
+          print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
+          // Speed tracking
+          double speed = position.speed; // Speed in meters per second
+          lastKnownSpeed = speed * 3.6; // Convert to km/h
+          totalSpeed += lastKnownSpeed;
+          speedCount++;
 
-            Duration staticTripDuration = Duration(minutes: 15, seconds: 20);
-            double staticAvgSpeed = 45.0;
-            double staticTotalDistance = 5000.0; // Dummy total distance (5 km)
+          if (previousPosition != null) {
+            double segmentDistance = Geolocator.distanceBetween(
+              previousPosition!.latitude,
+              previousPosition!.longitude,
+              position.latitude,
+              position.longitude,
+            );
+            totalDistanceTraveled += segmentDistance;
+          }
+          previousPosition = position;
 
-            // Save static trip data to Firestore
+          if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
+            _tripCompleted = true;
+
+            Duration tripDuration = DateTime.now().difference(tripStartTime!);
+            double avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
+
+            print("🎉 Trip Completed - Dynamic Data");
+
+            // Save dynamic trip data to Firestore
             TripService(
               tripStartTime: tripStartTime!,
-              totalDistanceTraveled: staticTotalDistance,
-              totalSpeed: staticAvgSpeed * 15,
-              // Dummy speed calculations
-              speedCount: 15,
-              // Dummy speed count
+              totalDistanceTraveled: totalDistanceTraveled,
+              totalSpeed: totalSpeed,
+              speedCount: speedCount,
               startLocation: {
                 "latitude": _startLocation!.latitude,
                 "longitude": _startLocation!.longitude,
-              },
-              // ✅ Correct start location
+              }, // ✅ Correct start location
               destination: {
-                "latitude": staticDestination.latitude,
-                "longitude": staticDestination.longitude,
+                "latitude": destination.latitude,
+                "longitude": destination.longitude,
               },
-              tripDuration: staticTripDuration,
+              tripDuration: tripDuration,
             ).saveTripDataToFirestore().then((tripId) {
               _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
             });
+
+
           } else {
-            print("🚗 Trip NOT Completed Yet (Static Test)");
+            print("🚗 Trip NOT Completed Yet (Live)");
           }
-  //
+
+          // ---------- STATIC TESTING ----------
+          // const double simulatedLat = 19.1889541;
+          // const double simulatedLng = 72.835543;
+          // GeoPoint? _startLocation; // Store the first recorded position
+          //
+          // GeoPoint simulatedSource = GeoPoint(
+          //     latitude: simulatedLat, longitude: simulatedLng);
+          // GeoPoint staticDestination = GeoPoint(
+          //     latitude: 19.1889541, longitude: 72.835543);
+          //
+          // double staticDistance = Geolocator.distanceBetween(
+          //   simulatedSource.latitude,
+          //   simulatedSource.longitude,
+          //   staticDestination.latitude,
+          //   staticDestination.longitude,
+          // );
+          //
+          // if (_startLocation == null) {
+          //   _startLocation = GeoPoint(
+          //     latitude: position.latitude,
+          //     longitude: position.longitude,
+          //   );
+          //   print("🚀 Start Location Captured: $_startLocation");
+          // }
+          //
+          // print('📏 Distance to Destination (Static Test): ${staticDistance
+          //     .toStringAsFixed(2)} meters');
+          //
+          // if (staticDistance <= thresholdDistance && !_tripCompleted) {
+          //   print("🎉 Trip Completed - Static Test");
+          //   // _showTripCompletedPopup();
+          //   _tripCompleted = true; // ✅ Prevent multiple pop-ups
+          //
+          //   Duration staticTripDuration = Duration(minutes: 15, seconds: 20);
+          //   double staticAvgSpeed = 45.0;
+          //   double staticTotalDistance = 5000.0; // Dummy total distance (5 km)
+          //
+          //   // Save static trip data to Firestore
+          //   TripService(
+          //     tripStartTime: tripStartTime!,
+          //     totalDistanceTraveled: staticTotalDistance,
+          //     totalSpeed: staticAvgSpeed * 15,
+          //     // Dummy speed calculations
+          //     speedCount: 15,
+          //     // Dummy speed count
+          //     startLocation: {
+          //       "latitude": _startLocation!.latitude,
+          //       "longitude": _startLocation!.longitude,
+          //     },
+          //     // ✅ Correct start location
+          //     destination: {
+          //       "latitude": staticDestination.latitude,
+          //       "longitude": staticDestination.longitude,
+          //     },
+          //     tripDuration: staticTripDuration,
+          //   ).saveTripDataToFirestore().then((tripId) {
+          //     _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
+          //   });
+          // } else {
+          //   print("🚗 Trip NOT Completed Yet (Static Test)");
+          // }
+          //
         });
 
   }
