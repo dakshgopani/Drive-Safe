@@ -6,7 +6,6 @@ class FirebaseService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final FirebaseFirestore _firestores = FirebaseFirestore.instance;
 
   // Getter to access the current user's ID
   String get currentUserId => _auth.currentUser!.uid;

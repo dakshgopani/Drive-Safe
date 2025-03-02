@@ -5,13 +5,26 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'create_room_page.dart';
 import 'join_room_page.dart';
 
-class ConvoyModeMainPage extends StatelessWidget {
-  const ConvoyModeMainPage({super.key});
+class ConvoyModeMainPage extends StatefulWidget {
+  final String userId;
+  final String userName;
 
+  const ConvoyModeMainPage({
+    super.key,
+    required this.userId,
+    required this.userName,
+  });
+
+  @override
+  _ConvoyModeMainPageState createState() => _ConvoyModeMainPageState();
+}
+
+class _ConvoyModeMainPageState extends State<ConvoyModeMainPage> {
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       body: Center(
         child: Stack(
@@ -92,7 +105,9 @@ class ConvoyModeMainPage extends StatelessWidget {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => JoinRoomPage()),
+                              MaterialPageRoute(
+                                builder: (context) => JoinRoomPage(userId: widget.userId,userName:widget.userName),
+                              ),
                             );
                           },
                           style: ElevatedButton.styleFrom(

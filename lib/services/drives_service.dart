@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class TripService {
+class DriveService {
   final DateTime? tripStartTime;
   final double? totalDistanceTraveled;
   final double? totalSpeed;
@@ -10,14 +10,7 @@ class TripService {
   final Map<String, dynamic>? destination;
   final Duration? tripDuration;
 
-  // Optional fields
-  final double? drivingScore;
-  final double? ecoScore;
-  final double? safetyScore;
-  final int? harshBrakingCount;
-  final int? harshCorneringCount;
-
-  TripService({
+  DriveService({
     this.tripStartTime,
     this.totalDistanceTraveled,
     this.totalSpeed,
@@ -25,18 +18,14 @@ class TripService {
     this.startLocation,
     this.destination,
     this.tripDuration,
-    this.drivingScore,
-    this.ecoScore,
-    this.safetyScore,
-    this.harshBrakingCount,
-    this.harshCorneringCount,
+    
   });
 
   Future<String> saveTripDataToFirestore() async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
       DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(userId);
-      CollectionReference tripsCollection = userRef.collection('trips');
+      CollectionReference tripsCollection = userRef.collection('drives');
 
       Map<String, dynamic> tripData = {
         if (tripStartTime != null) "startTime": tripStartTime,
@@ -48,11 +37,6 @@ class TripService {
         if (startLocation != null) "startLocation": startLocation,
         if (destination != null) "destination": destination,
         "timestamp": FieldValue.serverTimestamp(),
-        if (drivingScore != null) "drivingScore": drivingScore,
-        if (ecoScore != null) "ecoScore": ecoScore,
-        if (safetyScore != null) "safetyScore": safetyScore,
-        if (harshBrakingCount != null) "harshBrakingCount": harshBrakingCount,
-        if (harshCorneringCount != null) "harshCorneringCount": harshCorneringCount,
       };
 
       DocumentReference tripRef = await tripsCollection.add(tripData);

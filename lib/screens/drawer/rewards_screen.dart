@@ -47,7 +47,7 @@ class _RewardsSystemState extends State<RewardsSystem> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.purple.shade50,
+      backgroundColor: const Color.fromARGB(255, 132, 216, 255),
       appBar: AppBar(title: const Text("Rewards & Points")),
       body: Center(
         child: AnimatedSwitcher(

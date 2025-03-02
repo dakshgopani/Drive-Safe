@@ -7,10 +7,10 @@ import 'package:algorithm_avengers_ves_final/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/distance_bottom_sheet.dart';
+import '../services/drives_service.dart';
 import '../services/trip_service.dart';
 import '../utils/constants.dart';
 import '../api/apis.dart';
@@ -27,7 +27,7 @@ import 'package:confetti/confetti.dart';
 import 'package:algorithm_avengers_ves_final/screens/welcome_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:firebase_auth/firebase_auth.dart';
-
+import '../services/driving_service.dart';
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -86,7 +86,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   bool isBottomSheetVisible = false;
   double currentRotation = 0.0; // Tracks the cumulative rotation angle
   StreamSubscription? _gyroscopeSubscription;
-
+  final DrivingBehaviorService _behaviorService = DrivingBehaviorService();
+  StreamSubscription<Position>? _positionStream;
   @override
   void initState() {
     super.initState();
@@ -509,10 +510,12 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     await _mapController.moveTo(_startLocation!, animate: true);
   }
 
-  StreamSubscription<Position>? _positionStream;
+  // StreamSubscription<Position>? _positionStream;
 
 
   void startLocationTracking() {
+    _tripCompleted=false;
+
     const double thresholdDistance = 10.0; // Trip completes within 10 meters
 
     double totalDistanceTraveled = 0.0;
@@ -527,21 +530,108 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     _positionStream =
         Geolocator.getPositionStream(locationSettings: locationSettings)
             .listen((Position position) {
-          // ---------- DYNAMIC TRIP TRACKING ----------
-          GeoPoint userLocation = GeoPoint(
-            latitude: position.latitude,
-            longitude: position.longitude,
-          );
+        //   // ---------- DYNAMIC TRIP TRACKING ----------
+        //   GeoPoint userLocation = GeoPoint(
+        //     latitude: position.latitude,
+        //     longitude: position.longitude,
+        //   );
+          
+        //   GeoPoint? _startLocation; // Store the first recorded position
+          
+        //   GeoPoint destination = _destinationLocation ?? GeoPoint(latitude: 19.1889541, longitude: 72.835543);
+          
+        //   double dynamicDistance = Geolocator.distanceBetween(
+        //     userLocation.latitude,
+        //     userLocation.longitude,
+        //     destination.latitude,
+        //     destination.longitude,
+        //   );
+          
+        //   if (_startLocation == null) {
+        //     _startLocation = GeoPoint(
+        //       latitude: position.latitude,
+        //       longitude: position.longitude,
+        //     );
+        //     print("🚀 Start Location Captured: $_startLocation");
+        //   }
+          
+          
+        //   print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
+          
+        //   setState(() {
+        //     isNavigating = true;
+        //   });
+        //   // final drivingBehaviorState = DrivingBehaviorPage.globalKey.currentState;
+        // _behaviorService.startTracking();
+        //   // Speed tracking
+        //   double speed = position.speed; // Speed in meters per second
+        //   lastKnownSpeed = speed * 3.6; // Convert to km/h
+        //   totalSpeed += lastKnownSpeed;
+        //   speedCount++;
+          
+        //   if (previousPosition != null) {
+        //     double segmentDistance = Geolocator.distanceBetween(
+        //       previousPosition!.latitude,
+        //       previousPosition!.longitude,
+        //       position.latitude,
+        //       position.longitude,
+        //     );
+        //     totalDistanceTraveled += segmentDistance;
+        //   }
+        //   previousPosition = position;
+        //   setState(() {
+        //               isNavigating = true;
+        //               // _speed = position.speed * 3.6;
+        //   });
+        //   checkForNextTurn(position);
+        //   
+        //   if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
+        //     _tripCompleted = true;
+          
+        //     Duration tripDuration = DateTime.now().difference(tripStartTime!);
+        //     double avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
+          
+        //     print("🎉 Trip Completed - Dynamic Data");
+          
+        //     // Save dynamic trip data to Firestore
+        //     DriveService(
+        //       tripStartTime: tripStartTime!,
+        //       totalDistanceTraveled: totalDistanceTraveled,
+        //       totalSpeed: totalSpeed,
+        //       speedCount: speedCount,
+        //       startLocation: {
+        //         "latitude": _startLocation!.latitude,
+        //         "longitude": _startLocation!.longitude,
+        //       }, // ✅ Correct start location
+        //       destination: {
+        //         "latitude": destination.latitude,
+        //         "longitude": destination.longitude,
+        //       },
+        //      tripDuration: tripDuration,
+        //     ).saveTripDataToFirestore().then((tripId) {
+        //   _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
+        //   });
+          
+          
+        //   } else {
+        //     print("🚗 Trip NOT Completed Yet (Live)");
+        //   }
 
+          // ---------- STATIC TESTING ----------
+          const double simulatedLat = 19.1889541;
+          const double simulatedLng = 72.835543;
           GeoPoint? _startLocation; // Store the first recorded position
 
-          GeoPoint destination = _destinationLocation ?? GeoPoint(latitude: 19.1889541, longitude: 72.835543);
+          GeoPoint simulatedSource = GeoPoint(
+              latitude: simulatedLat, longitude: simulatedLng);
+          GeoPoint staticDestination = GeoPoint(
+              latitude: 19.1889541, longitude: 72.835543);
 
-          double dynamicDistance = Geolocator.distanceBetween(
-            userLocation.latitude,
-            userLocation.longitude,
-            destination.latitude,
-            destination.longitude,
+          double staticDistance = Geolocator.distanceBetween(
+            simulatedSource.latitude,
+            simulatedSource.longitude,
+            staticDestination.latitude,
+            staticDestination.longitude,
           );
 
           if (_startLocation == null) {
@@ -552,127 +642,43 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             print("🚀 Start Location Captured: $_startLocation");
           }
 
-          setState(() {
-            isNavigating = true;
-            // _speed = position.speed * 3.6;
-          });
-          checkForNextTurn(position);
-          _startGyroscopeListener();
+          print('📏 Distance to Destination (Static Test): ${staticDistance
+              .toStringAsFixed(2)} meters');
 
-          print('📏 Distance to Destination (Live): ${dynamicDistance.toStringAsFixed(2)} meters');
-          // Speed tracking
-          double speed = position.speed; // Speed in meters per second
-          lastKnownSpeed = speed * 3.6; // Convert to km/h
-          totalSpeed += lastKnownSpeed;
-          speedCount++;
+          if (staticDistance <= thresholdDistance && !_tripCompleted) {
+            print("🎉 Trip Completed - Static Test");
+            // _showTripCompletedPopup();
+            _tripCompleted = true; // ✅ Prevent multiple pop-ups
 
-          if (previousPosition != null) {
-            double segmentDistance = Geolocator.distanceBetween(
-              previousPosition!.latitude,
-              previousPosition!.longitude,
-              position.latitude,
-              position.longitude,
-            );
-            totalDistanceTraveled += segmentDistance;
-          }
-          previousPosition = position;
+            Duration staticTripDuration = Duration(minutes: 15, seconds: 20);
+            double staticAvgSpeed = 45.0;
+            double staticTotalDistance = 5000.0; // Dummy total distance (5 km)
 
-          if (dynamicDistance <= thresholdDistance && !_tripCompleted) {
-            _tripCompleted = true;
-
-            Duration tripDuration = DateTime.now().difference(tripStartTime!);
-            double avgSpeed = speedCount > 0 ? totalSpeed / speedCount : 0;
-
-            print("🎉 Trip Completed - Dynamic Data");
-
-            // Save dynamic trip data to Firestore
-            TripService(
+            // Save static trip data to Firestore
+            DriveService(
               tripStartTime: tripStartTime!,
-              totalDistanceTraveled: totalDistanceTraveled,
-              totalSpeed: totalSpeed,
-              speedCount: speedCount,
+              totalDistanceTraveled: staticTotalDistance,
+              totalSpeed: staticAvgSpeed * 15,
+              // Dummy speed calculations
+              speedCount: 15,
+              // Dummy speed count
               startLocation: {
                 "latitude": _startLocation!.latitude,
                 "longitude": _startLocation!.longitude,
-              }, // ✅ Correct start location
-              destination: {
-                "latitude": destination.latitude,
-                "longitude": destination.longitude,
               },
-              tripDuration: tripDuration,
+              // ✅ Correct start location
+              destination: {
+                "latitude": staticDestination.latitude,
+                "longitude": staticDestination.longitude,
+              },
+              tripDuration: staticTripDuration,
             ).saveTripDataToFirestore().then((tripId) {
               _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
             });
-
-
           } else {
-            print("🚗 Trip NOT Completed Yet (Live)");
+            print("🚗 Trip NOT Completed Yet (Static Test)");
           }
-
-          // ---------- STATIC TESTING ----------
-          // const double simulatedLat = 19.1889541;
-          // const double simulatedLng = 72.835543;
-          // GeoPoint? _startLocation; // Store the first recorded position
-          //
-          // GeoPoint simulatedSource = GeoPoint(
-          //     latitude: simulatedLat, longitude: simulatedLng);
-          // GeoPoint staticDestination = GeoPoint(
-          //     latitude: 19.1889541, longitude: 72.835543);
-          //
-          // double staticDistance = Geolocator.distanceBetween(
-          //   simulatedSource.latitude,
-          //   simulatedSource.longitude,
-          //   staticDestination.latitude,
-          //   staticDestination.longitude,
-          // );
-          //
-          // if (_startLocation == null) {
-          //   _startLocation = GeoPoint(
-          //     latitude: position.latitude,
-          //     longitude: position.longitude,
-          //   );
-          //   print("🚀 Start Location Captured: $_startLocation");
-          // }
-          //
-          // print('📏 Distance to Destination (Static Test): ${staticDistance
-          //     .toStringAsFixed(2)} meters');
-          //
-          // if (staticDistance <= thresholdDistance && !_tripCompleted) {
-          //   print("🎉 Trip Completed - Static Test");
-          //   // _showTripCompletedPopup();
-          //   _tripCompleted = true; // ✅ Prevent multiple pop-ups
-          //
-          //   Duration staticTripDuration = Duration(minutes: 15, seconds: 20);
-          //   double staticAvgSpeed = 45.0;
-          //   double staticTotalDistance = 5000.0; // Dummy total distance (5 km)
-          //
-          //   // Save static trip data to Firestore
-          //   TripService(
-          //     tripStartTime: tripStartTime!,
-          //     totalDistanceTraveled: staticTotalDistance,
-          //     totalSpeed: staticAvgSpeed * 15,
-          //     // Dummy speed calculations
-          //     speedCount: 15,
-          //     // Dummy speed count
-          //     startLocation: {
-          //       "latitude": _startLocation!.latitude,
-          //       "longitude": _startLocation!.longitude,
-          //     },
-          //     // ✅ Correct start location
-          //     destination: {
-          //       "latitude": staticDestination.latitude,
-          //       "longitude": staticDestination.longitude,
-          //     },
-          //     tripDuration: staticTripDuration,
-          //   ).saveTripDataToFirestore().then((tripId) {
-          //     _showTripCompletedPopup(userId!, tripId); // ✅ Pass tripId
-          //   });
-          // } else {
-          //   print("🚗 Trip NOT Completed Yet (Static Test)");
-          // }
-          //
         });
-
   }
 
   void _navigateToRewardsScreen(String userId, String tripId) {
@@ -685,7 +691,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   }
 
 
-  // *Function to show the trip completed pop-up*
+  // **Function to show the trip completed pop-up**
 
   void _showTripCompletedPopup(String userId, String tripId) {
     ConfettiController confettiController = ConfettiController(
@@ -816,7 +822,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     setState(() {
       isNavigating = false;
     });
-    _positionStream?.cancel(); // Stop tracking when no longer needed
+    _positionStream?.cancel();
+    _behaviorService.stopTracking();
   }
 
   void checkForNextTurn(Position userPosition) {
@@ -873,69 +880,78 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     }
   }
 
-  void _checkAndShowBottomSheet(BuildContext context,
-      void Function() startLocationTracking) {
-    // Show the bottom sheet
-    showBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      enableDrag: false,
-      showDragHandle: false,
-      // Add this to control the size of the bottom sheet
-      builder: (_) {
-        return FutureBuilder<dynamic>(
-          future: _setplaceDetails(), // Method to fetch place details
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              // Pass null to show loading state
-              return const DistanceBottomSheet(placeDetails: null);
+  void _checkAndShowBottomSheet(BuildContext context, void Function() startLocationTracking) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    builder: (_) {
+      return FutureBuilder<dynamic>(
+        future: _setplaceDetails(), // Fetch place details
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const DistanceBottomSheet(placeDetails: null);
+          } else {
+            final fetchedPlaceDetails = snapshot.data;
+            if (fetchedPlaceDetails is Map<String, dynamic>) {
+              return DistanceBottomSheet(
+                placeDetails: fetchedPlaceDetails,
+                startLocationTracking: startLocationTracking,
+                startDrivingAnalysis: () {
+                  // final state = DrivingBehaviorPage.globalKey.currentState;
+                  _behaviorService.startTracking();  
+                  debugPrint('Driving behavior analysis started: ${_behaviorService.isCollecting}'); // Debug statement
+                  // This now works correctly
+                },
+              );
             } else {
-              final fetchedPlaceDetails = snapshot.data;
-              print("$fetchedPlaceDetails");
-              if (fetchedPlaceDetails is Map<String, dynamic>) {
-                return DistanceBottomSheet(
-                  placeDetails: fetchedPlaceDetails,
-                  startLocationTracking: startLocationTracking,
-                );
-              } else {
-                return Center(
-                  child: AlertDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    title: const Text(
-                      'Invalid Place Details',
-                      style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    content: const Text(
-                      'We could not fetch the details for the selected place. Click retry to try again.',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          _checkAndShowBottomSheet(
-                              context, startLocationTracking);
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blueAccent,
-                        ),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                );
-              }
+              return _buildErrorDialog(context, startLocationTracking);
             }
+          }
+        },
+      );
+    },
+  );
+
+  // Ensure search UI state is updated
+  setState(() {
+    isSearching = false;
+  });
+
+  // Start location tracking when the bottom sheet opens
+  startLocationTracking();
+}
+
+Widget _buildErrorDialog(BuildContext context, void Function() startLocationTracking) {
+  return Center(
+    child: AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: const Text(
+        'Invalid Place Details',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      content: const Text(
+        'We could not fetch the details for the selected place. Click retry to try again.',
+        style: TextStyle(fontSize: 14),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            _checkAndShowBottomSheet(context, startLocationTracking);
           },
-        );
-      },
-    );
-    setState(() {
-      isSearching=false;
-    });
-  }
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.blueAccent,
+          ),
+          child: const Text('Retry'),
+        ),
+      ],
+    ),
+  );
+}
+
+  
+  
   Future<Offset?> calculateScreenCoordinates(GeoPoint targetPoint) async {
     // 1. Retrieve the current bounding box of the map
     BoundingBox? boundingBox = await _mapController.bounds;
@@ -1081,6 +1097,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                   isNavigating=false;
                   _deleteRoadAndMarker();
                   routes=[];
+                  // final state = DrivingBehaviorPage.globalKey.currentState;
+                  _behaviorService.stopTracking();  // This now works correctly
+
                 });
               }
           }
@@ -1089,6 +1108,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           _deleteRoadAndMarker();
           _centerOnCurrentLocation();
         }
+
 
         // Prevent default back action
         return Future.value(false);
@@ -1114,7 +1134,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
                 showReactionCapsule: _showReactionCapsule,),
 
               // Toggle between top bar and search UI
-              if (!isSearching && !isNavigating) _buildTopBar(),
+              if (!isSearching) _buildTopBar(),
 
               // Navigation UI
               if (isNavigating) ...[
@@ -1158,17 +1178,17 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
               // Location and Compass Buttons
               Positioned(
-                top: isNavigating ? 280 : 200,
+                top: 200,
                 left: 16,
                 child: LocationButton(onPressed: _centerOnCurrentLocation),
               ),
               Positioned(
-                top: isNavigating ? 210 : 130,
+                top: 130,
                 left: 16,
                 child: buildCompass(60, Colors.white, Colors.red),
               ),
               Positioned(
-                top: isNavigating ? 210 :130,
+                top: 130,
                 right: 16,
                 child: ZoomButtons(mapController: _mapController),
               ),
@@ -1182,7 +1202,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       ),
     );
   }
-  /// *Builds the Top Bar*
+  /// **Builds the Top Bar**
   Widget _buildTopBar() {
     return Positioned(
       top: MediaQuery.of(context).padding.top,
@@ -1279,7 +1299,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   }
 
 
-  /// *Builds the Search UI*
+  /// **Builds the Search UI**
   Widget _buildSearchScreen() {
     return Positioned.fill(
 
@@ -1334,7 +1354,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
 
 
 
-  /// *Reusable Quick Action Button*
+  /// **Reusable Quick Action Button**
   Widget _buildQuickActionButton({
     required IconData icon,
     required VoidCallback onTap,
@@ -1608,3 +1628,4 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 }
+// Widget for "No Recent Search"

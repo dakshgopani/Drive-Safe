@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:logger/logger.dart';
-import '../services/drive_score_api.dart';
+import '../services/driving_score_api.dart';
 import '../services/sensors_service.dart';
 import '../services/crash_detection_api.dart';
 import '../services/background_service.dart';
@@ -13,7 +12,7 @@ class DrivingMonitorScreen extends StatefulWidget {
 }
 
 class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
-  final Logger _logger = Logger();
+  // final Logger _logger = Logger();
   final SensorService _sensorService = SensorService();
   final CrashDetectionAPI _crashDetectionAPI = CrashDetectionAPI();
   final DrivingScoreAPI _drivingScoreAPI = DrivingScoreAPI();
@@ -32,12 +31,12 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
   @override
   void initState() {
     super.initState();
-    _logger.i('Initializing DrivingMonitorScreen');
+    // _logger.i('Initializing DrivingMonitorScreen');
     BackgroundService.initialize();
   }
 
   void _toggleMonitoring() {
-    _logger.i('Toggling monitoring state');
+    // _logger.i('Toggling monitoring state');
     setState(() {
       isMonitoring = !isMonitoring;
     });
@@ -50,7 +49,7 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
   }
 
   void _startMonitoring() {
-    _logger.i('Starting monitoring');
+    // _logger.i('Starting monitoring');
     BackgroundService.startMonitoring();
     _ecoScoreList.clear();
     _safetyScoreList.clear();
@@ -58,7 +57,7 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
     _sensorService.startSensorTracking((sensorData) async {
       if (!mounted) return; // Prevents setState if widget is disposed
 
-      _logger.d('Received sensor data: ${json.encode(sensorData)}');
+      // _logger.d('Received sensor data: ${json.encode(sensorData)}');
 
       try {
         // Extract speed
@@ -88,14 +87,14 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
         }
 
         if (isCrashDetected && mounted && !isDialogShown) {
-          _logger.w('Crash detected!');
+          // _logger.w('Crash detected!');
           setState(() {
             isDialogShown = true;
           });
           _showCrashAlert();
         }
       } catch (e) {
-        _logger.e('Error in monitoring loop: $e');
+        // _logger.e('Error in monitoring loop: $e');
         if (mounted) {
           setState(() {
             _lastApiResponse = 'Error: $e';
@@ -106,7 +105,7 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
   }
 
   void _stopMonitoring() {
-    _logger.i('Stopping monitoring');
+    // _logger.i('Stopping monitoring');
     BackgroundService.stopMonitoring();
     _sensorService.stopSensorTracking();
 
@@ -129,7 +128,7 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
       builder: (BuildContext context) {
         return CrashAlertDialog(
           onEmergencyTriggered: () {
-            _logger.w('Emergency alert sent!');
+            // _logger.w('Emergency alert sent!');
           },
           onDialogClosed: () {
             if (mounted) {
@@ -229,7 +228,7 @@ class _DrivingMonitorScreenState extends State<DrivingMonitorScreen> {
 
   @override
   void dispose() {
-    _logger.i('Disposing DrivingMonitorScreen');
+    // _logger.i('Disposing DrivingMonitorScreen');
     _sensorService.stopSensorTracking();
     super.dispose();
   }

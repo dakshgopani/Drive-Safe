@@ -3,15 +3,15 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart'; // OSM package impo
 
 class MapView extends StatelessWidget {
   final MapController mapController;
-  final void Function(GeoPoint) showReactionCapsule;
-  MapView({required this.mapController, required this.showReactionCapsule});
+  final void Function(GeoPoint)? showReactionCapsule;
+  MapView({required this.mapController, this.showReactionCapsule});
   GeoPoint markerPoint = GeoPoint(latitude: 37.7749, longitude: -122.4194);
   @override
   Widget build(BuildContext context) {
     return OSMFlutter(
       controller: mapController,
       onGeoPointClicked: (GeoPoint tappedLocation) {
-        showReactionCapsule(
+        showReactionCapsule!(
             tappedLocation); // Show reaction capsule when marker is tapped
       },
       osmOption: OSMOption(

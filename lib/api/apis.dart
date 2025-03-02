@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 
 class ApiService {
-  static const String apiKey = '482e99f096mshef50116a37ccc61p12b962jsnc32558402289';
+  static const String apiKey = '5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121';
   //740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af
   //5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121
   //482e99f096mshef50116a37ccc61p12b962jsnc32558402289

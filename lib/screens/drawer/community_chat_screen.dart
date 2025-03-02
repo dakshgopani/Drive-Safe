@@ -259,7 +259,11 @@ class _DriverSafetyChatScreenState extends State<DriverSafetyChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Driver Safety Community'),
+          iconTheme: IconThemeData(color: Colors.white), // Change arrow color
+
+        title: Text('Community Chat',
+                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2,color: Colors.white),
+),
         backgroundColor: Colors.blueAccent,
         actions: [
           IconButton(

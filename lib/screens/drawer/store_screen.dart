@@ -149,9 +149,7 @@ class _StoreScreenState extends State<StoreScreen> {
               "Processing your request...",
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Raleway',
-              ),
+                fontWeight: FontWeight.w600,              ),
             ),
           ],
         ),
@@ -438,18 +436,19 @@ class _StoreScreenState extends State<StoreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEDECF4),
       appBar: AppBar(
+                  iconTheme: IconThemeData(color: Colors.white), // Change arrow color
+
         title: const Text(
-          "🎁 Rewards Shop",
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
-            fontFamily: 'Raleway',
-          ),
+          "🎁Rewards Shop",
+                 style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2,color: Colors.white),
+
         ),
-        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
         elevation: 0,
+         shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         // 🟡 Add GestureDetector to make the points clickable
         actions: [
           Padding(
@@ -551,7 +550,6 @@ class _StoreScreenState extends State<StoreScreen> {
                       style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'Raleway',
                           color: Colors.white),
                     ),
                   ),

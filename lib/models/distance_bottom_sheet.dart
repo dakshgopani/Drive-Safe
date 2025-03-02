@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/driving_service.dart';
+// import '../screens/drawer/driving_behaviour_analysis.dart';
 
 class DistanceBottomSheet extends StatelessWidget {
   final Map<String, dynamic>? placeDetails;
   final VoidCallback? startLocationTracking;
 
-  const DistanceBottomSheet({
-    Key? key,
-    this.placeDetails,
-    this.startLocationTracking,
-  }) : super(key: key);
+  final VoidCallback? startDrivingAnalysis;
 
+const DistanceBottomSheet({
+  Key? key,
+  this.placeDetails,
+  this.startLocationTracking,
+  this.startDrivingAnalysis,
+}) : super(key: key);
+  
   _makingPhoneCall(String phoneNumber) async {
     var url = Uri.parse("tel:$phoneNumber");
     if (await canLaunchUrl(url)) {
@@ -61,8 +66,12 @@ class DistanceBottomSheet extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context) {
+    final DrivingBehaviorService _behaviorService = DrivingBehaviorService();
+
     int reviewCount = (placeDetails?['reviews'] as List?)?.length ?? 0;
+    SizedBox(height: 16);
     return SingleChildScrollView(
+      
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
@@ -146,24 +155,59 @@ class DistanceBottomSheet extends StatelessWidget {
                 ),
               ),
               ElevatedButton.icon(
-                icon: const Icon(Icons.navigation),
-                label: const Text('Start'),
-                onPressed: () {
-                  if (startLocationTracking != null) {
-                    startLocationTracking!();
-                    Navigator.pop(context);
-                  } else {
-                    print('Start location tracking function is null.');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+  icon: const Icon(Icons.navigation),
+  label: const Text('Start'),
+  onPressed: () {
+    startLocationTracking?.call();   // Start location tracking
+    _behaviorService.startTracking();
+ _behaviorService.onCrashDetected = (bool crashed) {
+      if (crashed) {
+        // Handle crash detection here
+        // For example, show an alert dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext dialogContext) {
+            return AlertDialog(
+              title: Text('Potential Crash Detected'),
+              content: Text('Are you okay? Emergency services can be contacted if needed.'),
+              actions: [
+                TextButton(
+                  child: Text('I\'m Fine'),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+                  },
                 ),
-              ),
+                TextButton(
+                  child: Text('Get Help'),
+                  onPressed: () {
+                    // Add emergency contact functionality
+                    Navigator.of(dialogContext).pop();
+                    _makingPhoneCall('911'); // Or your local emergency number
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    };
+       // Start driving behavior analysis
+    print('Driving behavior analysis started: ${_behaviorService.isCollecting}'); // Debug statement
+    print('Crash Detection started: ${_behaviorService.onCrashDetected}'); // Debug statement
+
+    Navigator.pop(context);
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.blue,
+    foregroundColor: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+),
+
+
               if (placeDetails?['formatted_phone_number'] != null)
                 ElevatedButton.icon(
                   icon: const Icon(Icons.call),

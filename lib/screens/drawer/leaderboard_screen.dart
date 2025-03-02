@@ -25,14 +25,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+                          iconTheme: IconThemeData(color: Colors.white), // Change arrow color
+
         title: Text(
           'Leaderboard',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.1,
-          ),
+                  style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2,color: Colors.white),
+
         ),
-        centerTitle: true,
+      
         elevation: 0,
         backgroundColor: Colors.blueAccent,
         actions: [

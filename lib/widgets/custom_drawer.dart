@@ -1,6 +1,10 @@
 import 'package:algorithm_avengers_ves_final/screens/convoyMode/convoy_mode_main_page.dart';
+import 'package:algorithm_avengers_ves_final/screens/drawer/driving_school/course_overview.dart';
+import 'package:algorithm_avengers_ves_final/screens/drawer/insurance/insurance_main.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/store_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/driving_monitor_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/car_game_page.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/community_chat_screen.dart';
@@ -8,6 +12,46 @@ import 'package:algorithm_avengers_ves_final/screens/drawer/driving_behaviour_an
 import 'package:algorithm_avengers_ves_final/screens/drawer/insurance/policy_list_page.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/leaderboard_screen.dart';
 import 'package:algorithm_avengers_ves_final/screens/drawer/settings_screen.dart';
+import '../screens/drawer/trip_history_screen.dart';
+
+Future<double?> calculateAverageDrivingScore() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) {
+    throw Exception('No user is logged in.');
+  }
+
+  final tripsCollection = FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .collection('trips');
+
+  try {
+    QuerySnapshot snapshot = await tripsCollection.get();
+
+    double totalScore = 0;
+    int tripCount = 0;
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data.containsKey('drivingScore') && data['drivingScore'] is num) {
+        totalScore += (data['drivingScore'] as num).toDouble();
+        tripCount++;
+      }
+    }
+
+    if (tripCount == 0) {
+      print('No trips found.');
+      return null;
+    }
+
+    final averageScore = totalScore / tripCount;
+    print('Average Driving Score: $averageScore');
+    return averageScore;
+  } catch (e) {
+    print('Error fetching trips: $e');
+    rethrow;
+  }
+}
 
 class CustomDrawer extends StatefulWidget {
   final String userId;
@@ -31,14 +75,40 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   int _selectedIndex = -1;
-  late List<DrawerItem> _menuItems; // Declare the list without initializing it
-
+  late List<DrawerItem> _menuItems;
+  double? _drivingScore; // Use nullable double to handle async initialization
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize the menu items here, where widget is accessible
+    // Fetch driving score asynchronously
+    _fetchDrivingScore();
+
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(_controller);
+    _controller.forward();
+  }
+
+  Future<void> _fetchDrivingScore() async {
+    try {
+      final score = await calculateAverageDrivingScore();
+      setState(() {
+        _drivingScore = score ?? 0.0; // Default to 0.0 if null
+        _initializeMenuItems(); // Initialize menu items after score is fetched
+      });
+    } catch (e) {
+      setState(() {
+        _drivingScore = 0.0; // Fallback value on error
+        _initializeMenuItems();
+      });
+    }
+  }
+
+  void _initializeMenuItems() {
     _menuItems = [
       DrawerItem(
         title: "Drive Analysis",
@@ -55,30 +125,30 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
         category: "Drive & Analysis",
       ),
       DrawerItem(
-        title: "Record Drive",
-        icon: Icons.fiber_manual_record_outlined,
-        route: DrivingMonitorScreen(),
+        title: "Trip History",
+        icon: Icons.history,
+        route: TripHistoryScreen(),
         color: Colors.blueAccent,
         category: "Drive & Analysis",
       ),
       DrawerItem(
         title: "Insurance",
         icon: Icons.security_outlined,
-        route: PolicyListPage(),
+        route: PolicyCalculatorScreen(drivingScore: _drivingScore!),
         color: Colors.blueAccent,
         category: "Services",
       ),
       DrawerItem(
         title: "Convoy Mode",
         icon: Icons.speed_outlined,
-        route: ConvoyModeMainPage(),
+        route: ConvoyModeMainPage(userId:widget.userId,userName:widget.userName),
         color: Colors.blueAccent,
         category: "Services",
       ),
       DrawerItem(
-        title: "Simulation",
+        title: "Virtual School",
         icon: Icons.sports_esports_outlined,
-        route: CarGamePage(),
+        route: CourseOverviewPage(),
         color: Colors.blueAccent,
         category: "Entertainment",
       ),
@@ -92,7 +162,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
       DrawerItem(
         title: "Store",
         icon: Icons.local_grocery_store_sharp,
-        route: StoreScreen(userId: widget.userId), // ✅ No error now
+        route: StoreScreen(userId: widget.userId),
         color: Colors.blueAccent,
         category: "Entertainment",
       ),
@@ -104,15 +174,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
         category: "System",
       ),
     ];
-
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(_controller);
-    _controller.forward();
   }
-
 
   @override
   void dispose() {
@@ -122,24 +184,26 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    if (_drivingScore == null) {
+      // Show a loading state until the score is fetched
+      return Drawer(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.white,
-              Colors.blue.shade50,
-            ],
+            colors: [Colors.white, Colors.blue.shade50],
           ),
         ),
         child: Column(
           children: [
             _buildHeader(),
-            Expanded(
-              child: _buildMenuItems(),
-            ),
+            Expanded(child: _buildMenuItems()),
             _buildLogoutButton(),
           ],
         ),
@@ -147,26 +211,22 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
     );
   }
 
+  // Rest of your existing methods remain unchanged (_buildHeader, _buildMenuItems, etc.)
   Widget _buildHeader() {
     return Container(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
       child: Stack(
         children: [
-          // Background design
           Container(
             height: 250,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.blueAccent,
-                  Colors.blue.shade600,
-                ],
+                colors: [Colors.blueAccent, Colors.blue.shade600],
               ),
             ),
           ),
-          // Circular decorations
           Positioned(
             top: -50,
             right: -50,
@@ -191,22 +251,17 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
               ),
             ),
           ),
-          // Profile content
           Container(
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
                 SizedBox(height: 16),
-                // Profile picture container
                 Container(
                   padding: EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [
-                        Colors.white,
-                        Colors.white70,
-                      ],
+                      colors: [Colors.white, Colors.white70],
                     ),
                     boxShadow: [
                       BoxShadow(
@@ -230,7 +285,6 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
                   ),
                 ),
                 SizedBox(height: 16),
-                // User info
                 Text(
                   widget.userName,
                   style: TextStyle(
@@ -279,9 +333,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
         currentCategory = _menuItems[i].category;
         menuWidgets.add(_buildCategoryHeader(currentCategory));
       }
-      menuWidgets.add(
-        _buildMenuItem(i, _menuItems[i]),
-      );
+      menuWidgets.add(_buildMenuItem(i, _menuItems[i]));
     }
 
     return SingleChildScrollView(
@@ -328,13 +380,15 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: isSelected ? Colors.blue.shade50 : null,
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: Colors.blue.withOpacity(0.1),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ] : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: ListTile(
           onTap: () {
@@ -367,9 +421,7 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
             ),
           ),
           selected: isSelected,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );
@@ -389,20 +441,13 @@ class _CustomDrawerState extends State<CustomDrawer> with SingleTickerProviderSt
               border: Border.all(color: Colors.red.shade300),
               borderRadius: BorderRadius.circular(12),
               gradient: LinearGradient(
-                colors: [
-                  Colors.red.shade50,
-                  Colors.white,
-                ],
+                colors: [Colors.red.shade50, Colors.white],
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.logout_rounded,
-                  color: Colors.red.shade400,
-                  size: 20,
-                ),
+                Icon(Icons.logout_rounded, color: Colors.red.shade400, size: 20),
                 SizedBox(width: 8),
                 Text(
                   "Logout",

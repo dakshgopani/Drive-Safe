@@ -127,7 +127,11 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("QR Code")),
+      appBar: AppBar(
+        title: const Text("QR Code"),
+        centerTitle: true,
+        automaticallyImplyLeading: false, // This removes the back button
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -147,7 +151,8 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
               label: const Text("Save QR Code"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -157,12 +162,16 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
 
             // Exit Button
             ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context); // Pops the second screen
+              },
               icon: const Icon(Icons.exit_to_app),
               label: const Text("Exit"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
