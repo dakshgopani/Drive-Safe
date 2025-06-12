@@ -79,8 +79,7 @@ Build a smartphone application that:
 
 ## 🎥 Demo
 
-Watch the project in action: [👉 Click Here to Watch Demo](#)  
-<!-- Replace `#` with your actual demo link -->
+Watch the project in action: [👉 Click Here to Watch Demo](https://drive.google.com/file/d/1_vqGQ8FS_t18ntLF5lBJl3pa_3Pn3Hqz/view?usp=drivesdk)  
 
 ---
 
