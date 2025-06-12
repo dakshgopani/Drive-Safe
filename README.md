@@ -102,6 +102,27 @@ Watch the project in action: [👉 Click Here to Watch Demo](https://drive.googl
 
 ---
 
+## 🛠️ Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/dakshgopani/Drive-Safe.git
+cd Drive-Safe
+
+# Install dependencies
+flutter pub get
+
+# Add Firebase configuration files
+# For Android:
+# Place google-services.json in android/app/
+# For iOS:
+# Place GoogleService-Info.plist in ios/Runner/
+
+# Set up Firebase project and Firestore rules as required
+
+# Run the app
+flutter run
+
 ## 📝 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
