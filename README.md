@@ -1,16 +1,33 @@
-# algorithm_avengers_ves_final
+# 🚗 DriveSafe - VES Technothon Final Project
 
-A new Flutter project.
+A smartphone application for **real-time driving behavior analysis and feedback**, built using Flutter and AI/ML tools to promote safer driving habits.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🧱 Tech Stack
 
-A few resources to get you started if this is your first Flutter project:
+| 🧩 Layer              | 💡 Technology / Tools                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------ |
+| 🎨 **Frontend**       | Flutter (cross-platform mobile UI)                                                         |
+| 🔧 **Backend**        | Flask (REST APIs), Razorpay API (for payments)                                              |
+| 🤖 **AI / ML**        | Hugging Face (hosted ML models), Google ML Kit (barcode scanning), Mobile Scanner          |
+| 🗺️ **Maps**          | OpenStreetMap (`flutter_osm_plugin`, turn-by-turn navigation)                              |
+| 📱 **Device Sensors** | Sensors Plus (Accelerometer, Gyroscope)                                                    |
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 👨‍💻 Team Algorithm Avengers
+
+- 👩‍💻 [Kankshi Shah](https://www.linkedin.com/in/kankshi-shah-76539a258/)
+- 👨‍💻 [Daksh Gopani](https://www.linkedin.com/in/daksh-gopani-a13993251/)
+- 👨‍💻 [Rudra Parmar](https://www.linkedin.com/in/rudra-parmar-089125245/)
+- 👨‍💻 [Samyak Chheda](https://www.linkedin.com/in/samyakchheda/)
+
+---
+
+## 📝 License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).  
+
+MIT License  
+Copyright (c) 2025 Daksh Ankur Gopani
