@@ -114,9 +114,9 @@ flutter pub get
 
 # Add Firebase configuration files
 # For Android:
-# Place google-services.json in android/app/
+Place google-services.json in android/app/
 # For iOS:
-# Place GoogleService-Info.plist in ios/Runner/
+Place GoogleService-Info.plist in ios/Runner/
 
 # Set up Firebase project and Firestore rules as required
 
