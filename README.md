@@ -123,6 +123,7 @@ Place GoogleService-Info.plist in ios/Runner/
 # Run the app
 flutter run
 ```
+---
 
 ## 📝 License
 
