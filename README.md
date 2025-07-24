@@ -53,7 +53,7 @@ Build a smartphone application that:
 | 🧩 Layer              | 💡 Technology / Tools                              |
 |-----------------------|----------------------------------------------------|
 | 🎨 **Frontend**       | Flutter (cross-platform mobile UI)                 |
-| 🔧 **Backend**        | Flask (REST APIs), Razorpay API (payments)         |
+| 🔧 **Backend**        | Flask (REST APIs), Razorpay API (payments), Firebase         |
 | 🤖 **AI / ML**        | Hugging Face (hosted ML models), Google ML Kit     |
 | 🗺️ **Maps**          | OpenStreetMap (turn-by-turn navigation)            |
 | 📱 **Device Sensors** | Sensors Plus (Accelerometer, Gyroscope)            |
