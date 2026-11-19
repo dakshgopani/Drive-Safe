@@ -9,6 +9,10 @@ A smartphone application for **real-time driving behavior analysis and feedback*
 
 ---
 
+**[View Live Demo](https://drivesafe-alpha.vercel.app/)**
+
+---
+
 ## Overview
 
 **DriveSafe** transforms any smartphone into a smart co-driver. It passively monitors driving behavior using built-in sensors (accelerometer, gyroscope, GPS) and uses AI to deliver live insights, training, and rewards for safer driving — without needing costly vehicle modifications.
