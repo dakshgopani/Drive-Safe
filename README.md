@@ -294,7 +294,6 @@ This project is licensed under the MIT License.
 | Rudra Parmar | [LinkedIn](https://www.linkedin.com/in/rudra-parmar-089125245/) |
 | Samyak Chheda | [LinkedIn](https://www.linkedin.com/in/samyakchheda/) |
 
-All team members are from **Shri Bhagubhai Mafatlal Polytechnic**.
 
 ---
 
